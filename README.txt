@@ -13,9 +13,13 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Alias>             ::= !<Identifier>
 <Roll Label>        ::= <String> | ""
 <Identifer>         ::= [a-Z0-9()-_]+
+<Value>             ::= <String> | <Number> | <Boolean>
 <String>            ::= [a-Z0-9 ]+
 <Number>            ::= [0-9]+
 <Operator>          ::= + | -
 <Setting>           ::= Explode | ExplodeOn | ExplodeOnce | Emphasis
-<Value>             ::= <String> | <Number> | <Boolean>
 <Boolean>           ::= true | false
+
+
+Notes. ke = keep emphasis, ku keep unskilled (no explosions) 
+Slight grammar mistake in the fact that you can attach a roll options to a number, but I don't feel bad about that.
