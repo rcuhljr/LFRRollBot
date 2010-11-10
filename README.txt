@@ -2,7 +2,7 @@ L5R Roller design and grammar for Rolls.
 
 
 Roll Bot Grammar (Case Insensitive, broken down to regexes) -
-<Request>           ::= <Alias> | <Roll Request> | <Command>
+<Request>           ::= <Alias> | <Roll Request> | @<Command>
 <Roll Request>      ::= Roll <Roll Base> <Roll Label>
 <Roll Base>         ::= <Roll Base> <Operator> <Roll Base> | <Roll Base>  <Roll Options> |
                         <Number><Inner Roll Type><Number> | <Outer Roll Type><Number> | <Number>
@@ -19,7 +19,8 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Operator>          ::= + | -
 <Setting>           ::= Explode | ExplodeOn | ExplodeOnce | Emphasis
 <Boolean>           ::= true | false
-
+<Command>           ::= join #<String> | record <Identifier> <Roll Request> | Mode:<Mode>
+<Mode>              ::= L5R | D&D
 
 Notes. ke = keep emphasis, ku keep unskilled (no explosions) 
 Slight grammar mistake in the fact that you can attach a roll options to a number, but I don't feel bad about that.
