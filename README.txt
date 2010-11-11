@@ -6,7 +6,7 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Roll Request>      ::= Roll <Roll Base> <Roll Label>
 <Roll Base>         ::= <Roll Base> <Operator> <Roll Base> | <Roll Base>  <Roll Options> |
                         <Number><Inner Roll Type><Number> | <Outer Roll Type><Number> | <Number>
-<Roll Options>      ::= {<Option>} | ""
+<Roll Options>      ::= {<Option>} | "" | <Alias>
 <Option>            ::= <Option>, <Option> | <Setting>:<Value>
 <Inner Roll Type>   ::= d | k | ke | ku
 <Outer Roll Type>   ::= d
@@ -19,7 +19,7 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Operator>          ::= + | -
 <Setting>           ::= Explode | ExplodeOn | ExplodeOnce | Emphasis
 <Boolean>           ::= true | false
-<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier>
+<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | Record <Identifier> <Roll Options>
 <Help>              ::= Help | Roll | Dice
 <Mode>              ::= L5R | D&D
 

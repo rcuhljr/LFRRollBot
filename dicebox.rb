@@ -126,4 +126,85 @@ module Dicebox # Original by JD. http://d20.jonnydigital.com/ Mostly overhauled 
     end
 
   end
+  $debug = false
+  #TODO remove luck, deal with sidesper instead of mod perdie, force to return an array instead of a result value.
+  #Accepts the number of Rolled dice, kept dice, and an optional array of modifiers. Valid modifers are
+  #:explodeOn - int - Skilled rolls are 10, great potential would be 9, enter 11 for untrained.  
+  #:rerollBelow - int - Reroll any dice below the threshold. 5 would cause a 4 to reroll but not a 5. functions ONCE
+  #:dropBelow - int - Drop any dice rolled below the threshold. 5 would cause a 4 to drop bot not a 5.
+  #:sidesPerDie - int - add or subtract an integer value on all kept dice.
+  #Returns a hash of :value (int) :voidBack (bool)
+  def RollKeep(rolled, kept, modifiers = {})
+    result = {:value => 0, :voidBack => false}
+    explosionCount = 0
+    explosionCount2 =0
+    
+    return result unless (kept > 0 and rolled > 0) # idiot check
+    
+    kept = rolled unless rolled >= kept #idiot check 2
+    
+    #load in default values
+    explodesOn = modifiers[:explodeOn].nil? ? 10 : modifiers[:explodeOn]
+    luck = modifiers[:luck].nil? ? false : modifiers[:luck]
+    rerollBelow = modifiers[:rerollBelow].nil? ? 0 : modifiers[:rerollBelow]
+    dropBelow = modifiers[:dropBelow].nil? ? 0  : modifiers[:dropBelow]
+    modPerDie = modifiers[:modPerDie].nil? ? 0 : modifiers[:modPerDie]
+    
+    puts "explodesOn:#{explodesOn}"  unless !$debug
+    puts "luck:#{luck}"  unless !$debug
+    puts "rerollBelow:#{rerollBelow}"  unless !$debug
+    puts "dropBelow:#{dropBelow}"  unless !$debug
+    puts "modPerDie:#{modPerDie}"  unless !$debug
+    
+    results = Array.new(rolled) #setup results array
+    results2 = Array.new(rolled) if luck
+    rolled.times do |i|
+        aResult = RollOneDie(explodesOn, rerollBelow)      
+        aResult[:value] = 0 unless aResult[:value] >= dropBelow #wipe out the roll if it's below the drop point
+        aResult[:value] = aResult[:value] + modPerDie unless aResult[:value] == 0 #add per die modifier if roll is alive
+        explosionCount += aResult[:explosions] unless aResult[:value] == 0 #counting for void return
+        results[i] = aResult[:value] #all we need from here on out is the result of that roll.
+        if luck then
+          aResult2 = RollOneDie(explodesOn, rerollBelow)      
+          aResult2[:value] = 0 unless aResult2[:value] >= dropBelow #wipe out the roll if it's below the drop point
+          aResult2[:value] = aResult2[:value] + modPerDie unless aResult2[:value] == 0 #add per die modifier if roll is alive
+          explosionCount2 += aResult2[:explosions] unless aResult2[:value] == 0 #counting for void return
+          results2[i] = aResult2[:value] #all we need from here on out is the result of that roll.
+        end
+      end
+      temp1 = 0    
+      results.sort! {|x,y| y<=>x}
+      results.first(kept).each { |x| temp1 += x}    
+      temp2 = 0 if luck
+      results2.sort! {|x,y| y<=>x} if luck
+      results2.first(kept).each { |x| temp2 += x} if luck
+      
+      aValue = luck ? (temp1 > temp2 ? temp1 : temp2) : temp1
+      explosionCount = luck ? (temp1 > temp2 ? explosionCount : explosionCount2) : explosionCount
+      
+      result[:voidBack] = true unless explosionCount < 3            
+      result[:value] = aValue   
+    return result
+  end
+
+  def RollOneDie(explodesOn, rerollBelow)
+      aRoll = GetDiceRoll(explodesOn)    
+      puts "Roll1A: #{aRoll}" unless !$debug
+      aRoll = GetDiceRoll(explodesOn) if aRoll[:value] < rerollBelow #Redo!
+      puts "Roll1B: #{aRoll}" unless !$debug
+       #sort out luck. TODO decide if it's faster to do an if check and don't roll one/two extra times for luck if it's not needed.
+      puts "Final: #{aRoll}" unless !$debug    
+      return aRoll        
+  end
+
+  def GetDiceRoll( explodesOn )
+    total = 0
+    count = 0 #explosion counter
+    while(value = 1+rand(10))
+      total += value
+      break unless value >= explodesOn
+      count += 1 
+    end  
+  return {:value=>total, :explosions=>count}
+  end
 end
