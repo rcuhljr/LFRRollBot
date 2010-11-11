@@ -13,7 +13,7 @@ require 'socket'
 require 'strscan'
 require 'dicebox'
 
-module Bones
+module DiceBot
   class Client # an "instance" of bones; generally only one
     def initialize(nick, server, port, channels)
       @running = true
