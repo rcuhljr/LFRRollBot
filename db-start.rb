@@ -13,7 +13,7 @@ require 'DiceBot'
 # channels too quickly after connecting. Manually encourage it to join with this:
 # /msg bones @@@join #channel
 
-your_bot_name = "Dice_Eta"
+bot_name = "Dice_Eta"
 server_to_join = "irc.sandwich.net"
 port = 6667
 list_of_channels = ["#rokugan"]
@@ -22,5 +22,5 @@ list_of_channels = ["#rokugan"]
 # Alternatively, if you're familiar with Ruby, it should be straightforward. ('_')b
 
 begin
-  client = Bones::Client.new(your_bot_name, server_to_join, port, list_of_channels)
+  client = DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels)
 end

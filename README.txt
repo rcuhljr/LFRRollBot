@@ -19,7 +19,8 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Operator>          ::= + | -
 <Setting>           ::= Explode | ExplodeOn | ExplodeOnce | Emphasis
 <Boolean>           ::= true | false
-<Command>           ::= join #<String> | Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier>
+<Command>           ::= ?<Help> | Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier>
+<Help>              ::= Help | Roll | Dice
 <Mode>              ::= L5R | D&D
 
 Notes. ke = keep emphasis, ku keep unskilled (no explosions) 

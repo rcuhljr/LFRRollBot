@@ -16,8 +16,7 @@ require 'dicebox'
 module DiceBot
   class Client # an "instance" of bones; generally only one
     def initialize(nick, server, port, channels)
-      @running = true
-      # @dice = Dicebox.new # get out the dice
+      @running = true      
       
       @nick = nick
       @server = server # one only
@@ -32,7 +31,7 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick}"
+      @connection.speak "USER #{@nick} null null :Dicebot"
 
       # TODO: fix join bug
       # TODO: what is the join bug?
@@ -40,11 +39,16 @@ module DiceBot
     end
 
     def join(channels)
-      channels.each do |channel|
-        # join channel
-        @connection.speak "JOIN #{channel}"
-        puts "Joining #{channel}"
-      end
+	  if channels.kind_of?(Array) 
+        channels.each do |channel|
+          # join channel
+          @connection.speak "JOIN #{channel}"
+          puts "Joining #{channel}"
+        end 
+	  else
+	    @connection.speak "JOIN #{channels}"
+          puts "Joining #{channels}"
+	  end
     end
     
     def join_quietly(channels)
@@ -64,11 +68,12 @@ module DiceBot
           connect()
         end
         
-        handle_msg (@connection.listen)
+        handle_msg (@connection.listen)		
       end
     end
     
     def handle_msg(msg)
+	  puts msg unless msg.nil?
       case msg
         when nil
           #nothing
@@ -87,28 +92,21 @@ module DiceBot
     
     def respond(msg)
       # msg :name, :hostname, :mode, :origin, :privmsg, :text
-      if msg.name == "JDigital" && msg.text == "Bones, quit"
-        quit(msg.text)
-      end
+      #if msg.name == "" && msg.text == ""
+      #  quit(msg.text)
+      #end
      
-      if msg.text =~ /^bones(:|,*) (\S+)( (.*))?/i
-        prefix = "bones"
-        command = $2
-        args = $4
-        # do command - switch statement or use a command handler class
-        c = command_handler(prefix, command, args)
-        reply(msg, c) if c
-      elsif msg.text =~ /^@@@join (#.*)/
-        join $1.to_s
+      if msg.mode == "INVITE"
+        join msg.text
       elsif msg.text == "hay"
         reply(msg, "hay :v")
-      elsif msg.text =~ /^(!|@)(\S+)( (.*))?/
-        prefix = $1
-        command = $2
-        args = $4
+      #elsif msg.text =~ /^(!|@)(\S+)( (.*))?/
+      #  prefix = $1
+       # command = $2
+       # args = $4
         #do command
-        c = command_handler(prefix, command, args)
-        reply(msg, c) if c
+      #  c = command_handler(prefix, command, args)
+      #  reply(msg, c) if c
       elsif msg.text =~ /^(\d*#)?(\+|-|~)?(\d+)k(\d+)/
         # DICE HANDLER
         dice = Dicebox::Dice.new(msg.text)
@@ -178,7 +176,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
