@@ -2,11 +2,11 @@
 #
 # bones v0.03
 # by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
-# (run "bones-go.rb" first)
+# 
 #
 # NB: As a security measure, some IRC networks prevent IRC bots from joining
 # channels too quickly after connecting. Solve with this:
-# /msg bones @@@join #channel
+# /invite botname
 # adapted by rcuhljr for the purposes of an L5R specific dice roller.
 
 require 'socket'
@@ -14,7 +14,7 @@ require 'strscan'
 require 'dicebox'
 
 module DiceBot
-  class Client # an "instance" of bones; generally only one
+  class Client 
     def initialize(nick, server, port, channels)
       @running = true      
       
@@ -98,28 +98,18 @@ module DiceBot
      
       if msg.mode == "INVITE"
         join msg.text
-      elsif msg.text == "hay"
-        reply(msg, "hay :v")
-      #elsif msg.text =~ /^(!|@)(\S+)( (.*))?/
-      #  prefix = $1
-       # command = $2
-       # args = $4
-        #do command
-      #  c = command_handler(prefix, command, args)
-      #  reply(msg, c) if c
-      elsif msg.text =~ /^(\d*#)?(\+|-|~)?(\d+)k(\d+)/
-        # DICE HANDLER
-        dice = Dicebox::Dice.new(msg.text)
+      elsif msg.text =~ /^?(\S+)/
+        reply(msg, Helper.new.help($1))
+      elsif msg.text =~ /^!(\S+)/
+        #implement aliases
+      elsif msg.text =~ /^roll .*/i        
+        parser = GrammarEngine.new(msg.text)
         begin
-          d = dice.roll
-          if (d.length < 350)
-            reply(msg, d)
-          else
-            reply(msg, "I don't have enough dice to roll that!")
-          end
+          result = parser.execute          
+          reply(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
-          reply(msg, "I don't understand...")
+          reply(msg, "I had an unexpected error, sorry.")
         end
       end
     end
@@ -254,76 +244,16 @@ module DiceBot
       end
     end
   end
-
-  class CommandHandler
-    def initialize(prefix, command, args)
-      @prefix = prefix
-      @command = command
-      @args = args
-      @args.strip if @args
-    end
-    
-    def handle
-      case @command
-        when "chargen"
-          result = handle_chargen
-        when "rules", "rule"
-          result = handle_rules
-        when "help"
-          result = handle_help
+  #Todo move help texts out to txt files.
+  class Helper
+    def help(command)
+      case command.upcase
+        when "HELP", "ROLL", "DICE"
+          return "Dice Roller vers. 0.1\nCurrently supports common dice rolls used by the game\nLegend of the Five Rings.\nExamples:\nroll 5k3\nroll 5ke3\nroll5ku3\nThe first example rolls 5 d10 and keeps the highest 3, exploding on 10s,\nThe second rerolls 1's one time simulating emphasis in a skill.\nThe last example has no explosions for rolling unskilled."
         else
-          result = nil
-        #end
-      end
-      return result
-    end
-    
-    def handle_chargen
-      set = []
-      6.times do
-        roll = []
-        4.times do
-          roll << rand(6)+1
+          return nil
         end
-        roll = roll.sort
-        total = roll[1] + roll[2] + roll[3]
-        set << total
-      end
-      
-      if set.sort[5] < 13
-        return handle_chargen
-      end
-      
-      return set.sort.reverse.join(", ")
-    end
-    
-    def handle_rules
-      case @args
-        when "chargen", "pointsbuy", "pointbuy", "point buy", "points buy", "houserules", "house rules"
-          result = "Iron Heroes style pointbuy, 26 points. "
-          result += "Ability scores start at 10. Increments cost 1pt up to 15, 2pts up to 17, "
-          result += "and 4pts up to 18, before racial modifiers. "
-          result += "You may drop any one 10 to an 8 and spend the two points elsewhere. "
-          result += "You may have up to one flaw and two traits."
-        else
-          result = nil
-        #end
-      end
-      return result
-    end
-    
-    def handle_help
-      result = "Roll dice in the format '1d20+6'. Multiple sets as so: '2#1d20+6'. "
-      result += "Rolls can be followed with a comment as so: '1d20+6 attack roll'. "
-      result += "Separate multiple rolls with a semicolon, ';'. "
-      result += "Features: Can add and subtract multiple dice, shows original rolls, "
-      result += "high degree of randomness (uses a modified Mersenne Twister with a period of 2**19937-1)."
-      result += "Bugs: must specify the '1' in '1d20'."
-      return result
-    end
-
-    def handle_join(client,channel)
-      client.join(channel)
     end
   end
+  
 end

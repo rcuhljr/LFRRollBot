@@ -1,7 +1,38 @@
 require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
 require 'test/unit'
+require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
 
 class TestFixture < Test::Unit::TestCase
+
+  def test_grammarbasic
+    result = GrammarEngine.new("Roll 5k3 #Katana").execute
+    assert(false, result)  
+  end
+  
+  def test_grammarbasic2
+    result = GrammarEngine.new("Roll 5k3+6k2+5 #Katana").execute
+    assert(false, result)  
+  end
+  
+  def test_grammarbasic3
+    result = GrammarEngine.new("Roll 5k3 + 6k2 + 5 #Katana").execute
+    assert(false, result)  
+  end
+  
+  def test_grammarbasic4
+    result = GrammarEngine.new("Roll 5k3+ 6k2+ 5 #Katana").execute
+    assert(false, result)  
+  end
+  
+  def test_grammarbasic5
+    result = GrammarEngine.new("Roll 5k3 +6k2 +5 #Katana").execute
+    assert(false, result)  
+  end
+  
+  def test_grammarbasic6
+    result = GrammarEngine.new("Roll 5k3 +6k2+ 5 #Katana").execute
+    assert(false, result)  
+  end
 
   def test_roll1d20
     100.times do     

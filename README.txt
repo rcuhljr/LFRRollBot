@@ -4,14 +4,14 @@ L5R Roller design and grammar for Rolls.
 Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Request>           ::= <Alias> | <Roll Request> | @<Command> | ?<Help>
 <Roll Request>      ::= Roll <Roll Base> <Roll Label>
-<Roll Base>         ::= <Roll Base> <Operator> <Roll Base> | <Roll Base>  <Roll Options> |
+<Roll Base>         ::= <Roll Base><Operator><Roll Base> | <Roll Base><Roll Options> |
                         <Number><Inner Roll Type><Number> | <Outer Roll Type><Number> | <Number>
-<Roll Options>      ::= {<Option>} | "" | <Alias>
+<Roll Options>      ::= {<Option>} | "" | {<Alias>}
 <Option>            ::= <Option>, <Option> | <Setting>:<Value>
 <Inner Roll Type>   ::= d | k | ke | ku
 <Outer Roll Type>   ::= d
 <Alias>             ::= !<Identifier>
-<Roll Label>        ::= <String> | ""
+<Roll Label>        ::= #<String> | ""
 <Identifer>         ::= [a-Z0-9()-_]+
 <Value>             ::= <String> | <Number> | <Boolean>
 <String>            ::= [a-Z0-9 ]+
@@ -19,7 +19,8 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Operator>          ::= + | -
 <Setting>           ::= Explode | ExplodeOn | ExplodeOnce | Emphasis
 <Boolean>           ::= true | false
-<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | Record <Identifier> <Roll Options>
+<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | 
+                        Record <Identifier> <Roll Options>
 <Help>              ::= Help | Roll | Dice
 <Mode>              ::= L5R | D&D
 
