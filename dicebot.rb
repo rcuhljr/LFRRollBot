@@ -130,10 +130,12 @@ module DiceBot
     end    
     
     def command(msg)
-      case text
+      case msg.text
         when /^@record !(\S+) (roll .*)/i #@record !stuff Roll ...
           @rollAliases.save(msg.name, $1, $2)
           return "Saved."
+        when /^@List/i
+          return @rollAliases.list(msg.name)
         else
           return "I don't recognize that command, sorry."
       end      
@@ -310,5 +312,12 @@ module DiceBot
     def load(name, aliasString)    
       return @rollAliases[name.upcase][aliasString.upcase] unless @rollAliases[name.upcase].nil?
     end    
+    
+    def list(name)
+      return "No aliases found." if @rollAliases[name.upcase].nil?
+      resultString = ""
+      @rollAliases[name.upcase].keys.each { |x| resultString += "!" + x.downcase + ", " }
+      return resultString.slice(0,resultString.size-2)
+    end
   end  
 end
