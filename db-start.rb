@@ -16,7 +16,7 @@ require 'DiceBot'
 bot_name = "Dice_Eta"
 server_to_join = "irc.sandwich.net"
 port = 6667
-list_of_channels = ["#rokugan"]
+list_of_channels = ["#testchannel2"]
 
 # NOTE: To join multiple networks, you can copy this file to create two Boneses.
 # Alternatively, if you're familiar with Ruby, it should be straightforward. ('_')b

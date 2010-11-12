@@ -16,12 +16,12 @@ require 'GrammarEngine'
 module DiceBot
   class Client 
     def initialize(nick, server, port, channels)
-      @running = true      
-      
+      @running = true            
       @nick = nick
       @server = server # one only
       @port = port
       @channels = channels
+      @rollAliases = RollAliasMananger.new
 
       connect()
       run()
@@ -103,9 +103,18 @@ module DiceBot
       elsif msg.text =~ /^\?(\S+)/
         reply(msg, Helper.new.help($1))
       elsif msg.text =~ /^!(\S+)/
-        #implement aliases
-      elsif msg.text =~ /^roll .*[dkeu][0-9].*/i  
-        puts "rolling"
+        rollString = @rollAliases.load(msg.name, $1)
+        parser = GrammarEngine.new(rollString)
+        begin
+          result = parser.execute          
+          reply(msg, result)
+        rescue Exception => e
+          puts "ERROR: " + e.to_s
+          reply(msg, "I had an unexpected error, sorry.")
+        end
+      elsif msg.text =~ /^@(\S+)/
+        reply(msg, command(msg))
+      elsif msg.text =~ /^roll .*[dkeu][0-9].*/i          
         parser = GrammarEngine.new(msg.text)
         begin
           result = parser.execute          
@@ -116,6 +125,16 @@ module DiceBot
         end
       end
     end    
+    
+    def command(msg)
+      case text
+        when /^@record !(\S+) (roll .*)/i #@record !stuff Roll ...
+          @rollAliases.save(msg.name, $1, $2)
+        else
+          return "I don't recognize that command, sorry."
+        end
+      end
+    end
 
     def reply(msg, message) # reply to a pm or channel message
       if msg.privmsg
@@ -254,4 +273,36 @@ module DiceBot
     end
   end
   
+  class DataManager
+    def load(name)
+      dataFile = File.new(name,"r")      
+      return Marshal.load(dataFile)
+    end
+
+    def store(name, data)
+      dataFile = File.new(name,"w")        
+      Marshal.dump(data,dataFile)
+      dataFile.close
+    end
+  end
+  
+  class RollAliasMananger    
+    def initiliaze    
+      @rollAliasFileName = "rollalias.dat"      
+      begin
+        @rollAliases DataManager.new.load(@rollAliasFileName)
+      rescue
+        @rollAliases = Hash.new
+        @rollAliases["TOKI"] = Hash.new
+        @rollAliases["TOKI"]["!TEST"] = "8k3{ExplodeOn:9} #sample"
+        DataManager.new.store(@rollAliasFileName, @rollAliases)
+      end    
+    end
+    def save(name, aliasString, value)
+      @rollAliases[name.upcase][aliasString.upcase] = value
+    end
+    def load(name, aliaString)
+      return @rollAliases[name.upcase][aliasString.upcase]
+    end
+  end  
 end
