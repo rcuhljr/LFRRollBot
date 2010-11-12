@@ -27,8 +27,7 @@ class Dicebox
     
     results = Array.new(rolled) #setup results array    
     rolled.times do |i|
-        aResult = RollOneDie(sidesPerDie, explodesOn, rerollBelow )      
-        aResult = 0 unless aResult >= dropBelow #wipe out the roll if it's below the drop point                
+        aResult = RollOneDie(sidesPerDie, explodesOn, rerollBelow )              
         results[i] = aResult #all we need from here on out is the result of that roll.        
       end
       aValue = 0    

@@ -51,7 +51,7 @@ class GrammarEngine
       end
     else
       @opCount -= 1
-      if(inStr =~ /([0-9]+)([dkeu])([0-9]+)(\{.*\}|$)/i) #<num><type><num>[<options>]
+      if(inStr =~ /([0-9]+)([dkeu]+)([0-9]+)(\{.*\}|$)/i) #<num><type><num>[<options>]
         rollResult = Roll($1,$2,$3,$4);
       elsif(inStr =~ /d([0-9]+)(\{.*\}|$)/i)#<type><num>[<options>]
         rollResult = Roll("1",$1,$2,$3);
@@ -80,15 +80,19 @@ class GrammarEngine
     num2 = num2.to_i
     explodeOn = num2.to_i+1
     explode = true
-    emphasis = 2    
+    override = false
+    emphasis = 1    
     if(!options.nil? && options != "")
-      options = options[1..options.size-1]
+      options = options[1..options.size-2]
       optionSet = options.split(',')
       optionSet.each { |x| 
+        puts x
         couple = x.split(':')
+        puts couple
         case couple[0].upcase
           when "EXPLODEON"
             explodeOn = couple[1].to_i
+            override = true
           when "EMPHASIS"
             emphasis = 0 unless couple[1].to_s.upcase == "TRUE"
           when "EXPLODE"
@@ -105,13 +109,14 @@ class GrammarEngine
         rollOptions[:sidesPerDie] = num2
         rollResult = Dicebox.new.RollKeep(num1.to_i, num1.to_i, rollOptions)
       when "K"        
-        rollOptions[:explodeOn] = 10        
+        rollOptions[:explodeOn] = 10 unless override
         rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
       when "KE"
         rollOptions[:rerollBelow] = 2
+        rollOptions[:explodeOn] = 10 unless override
         rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
       when "KU"
-        rollOptions[:explodeOn] = 11
+        rollOptions[:explodeOn] = 11 
         rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
       else
         @failed = true
@@ -127,6 +132,7 @@ class GrammarEngine
     if(@failed)
       return failText
     end
-    return "#{@label[1..@label.size]} #{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}"
+    return "#{@label[1..@label.size]} #{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}" unless @label.nil?
+    return "#{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}"
   end    
 end

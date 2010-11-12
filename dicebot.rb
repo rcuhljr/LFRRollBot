@@ -11,7 +11,7 @@
 
 require 'socket'
 require 'strscan'
-require 'dicebox'
+require 'GrammarEngine'
 
 module DiceBot
   class Client 
@@ -31,34 +31,34 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick} * * :Dicebot"      
+      @connection.speak "USER #{@nick} bones * :Bones Dicebot: http://d20.jonnydigital.com/"
       # TODO: fix join bug
       # TODO: what is the join bug?
       join(@channels)
     end
 
     def join(channels)
-      #if channels.kind_of?(Array) 
+      if channels.kind_of?(Array) 
           channels.each do |channel|
             # join channel
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
           end 
-     # else
-     #   @connection.speak "JOIN #{channels}"
-     #       puts "Joining #{channels}"
-     # end
+      else
+        @connection.speak "JOIN #{channels}"
+            puts "Joining #{channels}"
+      end
     end
     
     def join_quietly(channels)
-     # if channels.kind_of?(Array) 
+      if channels.kind_of?(Array) 
         channels.each do |channel|
           # join channel
           @connection.speak("JOIN #{channel}", true)
         end
-     # else
-     #   @connection.speak "JOIN #{channels}"        
-     # end
+      else
+        @connection.speak "JOIN #{channels}"        
+      end
     end
     
     def run # go
@@ -76,7 +76,7 @@ module DiceBot
     end
     
     def handle_msg(msg)
-	  #puts msg unless msg.nil?
+	  puts msg unless msg.nil?
       case msg
         when nil
           #nothing
@@ -214,7 +214,7 @@ module DiceBot
         if quietly != true
           puts("spoke>> " + msg)
         end
-        @socket.write(msg + " ")
+        @socket.write(msg + "\n")
       rescue Errno::ECONNRESET
         @disconnected = true;
       end 
