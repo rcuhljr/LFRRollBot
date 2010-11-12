@@ -32,7 +32,7 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick} bones * :Bones Dicebot: http://d20.jonnydigital.com/"
+      @connection.speak "USER #{@nick} dice_eta * :Dice_Eta: ?help for more information"
       # TODO: fix join bug
       # TODO: what is the join bug?
       join(@channels)
@@ -102,7 +102,8 @@ module DiceBot
       if msg.mode == "INVITE"
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
-        say(msg.origin, Helper.new.help($1))
+        say(msg.origin, Helper.new.help($1)) unless msg.privmsg
+        reply(msg,Helper.new.help($1)) unless !msg.privmsg
       elsif msg.text =~ /^!(\S+)/
         rollString = @rollAliases.load(msg.name, $1)
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?

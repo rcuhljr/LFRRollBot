@@ -14,10 +14,10 @@ require 'C:\Code\GitRepos\LFRRollBot\DiceBot'
 # channels too quickly after connecting. Manually encourage it to join with this:
 # /msg bones @@@join #channel
 
-bot_name = "Dice_Eta_test"
+bot_name = "Dice_Eta"
 server_to_join = "irc.sandwich.net"
 port = 6667
-list_of_channels = ["#testchannel2"]
+list_of_channels = ["#Rokugan"]
 
 # NOTE: To join multiple networks, you can copy this file to create two Boneses.
 # Alternatively, if you're familiar with Ruby, it should be straightforward. ('_')b
