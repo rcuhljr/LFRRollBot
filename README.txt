@@ -22,7 +22,8 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | 
                         Record <Identifier> <Roll Options>
 <Help>              ::= Help | Roll | Dice
-<Mode>              ::= L5R | D&D
+<Mode>              ::= L5R | D&D | T{<TriggerString>}
+<TriggerString>     ::= roll | r | !r | !roll
 
 Notes. ke = keep emphasis, ku keep unskilled (no explosions) 
 Slight grammar mistake in the fact that you can attach a roll options to a number, but I don't feel bad about that.

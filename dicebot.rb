@@ -104,7 +104,7 @@ module DiceBot
         reply(msg, Helper.new.help($1))
       elsif msg.text =~ /^!(\S+)/
         #implement aliases
-      elsif msg.text =~ /^roll .*/i  
+      elsif msg.text =~ /^roll .*[dkeu][0-9].*/i  
         puts "rolling"
         parser = GrammarEngine.new(msg.text)
         begin
@@ -247,7 +247,7 @@ module DiceBot
     def help(command)
       case command.upcase
         when "HELP", "ROLL", "DICE"
-          return "Dice Roller vers. 0.1 Currently supports common dice rolls used by the game Legend of the Five Rings. Examples: roll 5k3 roll 5ke3 roll5ku3 The first example rolls 5 d10 and keeps the highest 3, exploding on 10s, The second rerolls 1's one time simulating emphasis in a skill. The last example has no explosions for rolling unskilled."
+          return "Dice Roller Currently supports common dice rolls used by the game Legend of the Five Rings. Examples: roll 5k3 roll 5ke3 roll5ku3 The first example rolls 5 d10 and keeps the highest 3, exploding on 10s, The second rerolls 1's one time simulating emphasis in a skill. The last example has no explosions for rolling unskilled. The BNF that this bot is being designed around can be found at https://github.com/rcuhljr/LFRRollBot/blob/master/README.txt not all non terminals are implemented."
         else
           return nil
         end

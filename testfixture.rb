@@ -1,8 +1,8 @@
-#require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-#require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
+require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
 require 'test/unit'
-require 'Dicebox'
-require 'GrammarEngine'
+#require 'Dicebox'
+#require 'GrammarEngine'
 
 class TestFixture < Test::Unit::TestCase
 
@@ -56,5 +56,10 @@ class TestFixture < Test::Unit::TestCase
       testValue = Dicebox.new.RollKeep(5, 3, {:explodeOn => 10, :sidesPerDie => 10})
       assert(false, "value of #{testValue[:total]}\nValues of:#{testValue[:values].to_s}")      
     end
+  end
+  
+  def test_grammarbasic6
+    result = GrammarEngine.new("Roll a die for me").execute
+    assert(false, result)  
   end
 end

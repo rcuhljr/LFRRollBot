@@ -1,5 +1,5 @@
-#require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-require 'Dicebox'
+require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
+#require 'Dicebox'
 
 class GrammarEngine
   def initialize(msg)
@@ -127,10 +127,10 @@ class GrammarEngine
 
   def execute
     rollSplitter
-    @atoms.each {|x| evalute x}    
+    @atoms.each {|x| evalute x unless @failed}    
     
     if(@failed)
-      return failText
+      return @failText
     end
     return "#{@label[1..@label.size]} #{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}" unless @label.nil?
     return "#{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}"
