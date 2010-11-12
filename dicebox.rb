@@ -20,6 +20,8 @@ class Dicebox
     dropBelow = modifiers[:dropBelow].nil? ? 0  : modifiers[:dropBelow]
     sidesPerDie = modifiers[:sidesPerDie].nil? ? 10 : modifiers[:sidesPerDie]
     
+    explodesOn = 2 unless (explodesOn >= 2)
+    
     puts "explodesOn:#{explodesOn}"  unless !$debug    
     puts "rerollBelow:#{rerollBelow}"  unless !$debug
     puts "dropBelow:#{dropBelow}"  unless !$debug

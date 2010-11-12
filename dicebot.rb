@@ -11,8 +11,8 @@
 
 require 'socket'
 require 'strscan'
-#require 'GrammarEngine'
-require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+require 'GrammarEngine'
+#require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
 
 module DiceBot
   class Client 
@@ -272,7 +272,10 @@ module DiceBot
     def help(command)
       case command.upcase
         when "HELP", "ROLL", "DICE"
-          return "L5R Dice Roller. Examples: 'roll 5k3' rolls 5 d10 and keeps the best 3, exploding on 10's. 'roll 5ke3' rerolls 1's one time(emphasis). 'roll 3ku3' this roll has no explosions(unskilled). The BNF that this bot will follow is at found at https://github.com/rcuhljr/LFRRollBot/blob/master/README.txt not all non terminals are implemented."
+          dataFile = File.new("help.txt","r")
+          val = dataFile.gets
+          dataFile.close
+          return val          
         else
           return nil
         end

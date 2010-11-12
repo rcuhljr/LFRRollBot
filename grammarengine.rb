@@ -1,5 +1,5 @@
-require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-#require 'Dicebox'
+#require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
+require 'Dicebox'
 
 class GrammarEngine
   def initialize(msg)
@@ -117,6 +117,9 @@ class GrammarEngine
         rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
       when "KU"
         rollOptions[:explodeOn] = 11 
+        rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
+      when "KD"
+        rollOptions[:explodeOn] = 9 
         rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
       else
         @failed = true
