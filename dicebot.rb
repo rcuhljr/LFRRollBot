@@ -31,7 +31,7 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick} null null :Dicebot"
+      @connection.speak "USER #{@nick} Just Another :Dicebot"
 
       # TODO: fix join bug
       # TODO: what is the join bug?
@@ -98,7 +98,7 @@ module DiceBot
      
       if msg.mode == "INVITE"
         join msg.text
-      elsif msg.text =~ /^?(\S+)/
+      elsif msg.text =~ /^\?(\S+)/
         reply(msg, Helper.new.help($1))
       elsif msg.text =~ /^!(\S+)/
         #implement aliases
@@ -216,7 +216,7 @@ module DiceBot
         if quietly != true
           puts("spoke>> " + msg)
         end
-        @socket.write(msg + "\n")
+        @socket.write(msg + " ")
       rescue Errno::ECONNRESET
         @disconnected = true;
       end 
@@ -249,7 +249,7 @@ module DiceBot
     def help(command)
       case command.upcase
         when "HELP", "ROLL", "DICE"
-          return "Dice Roller vers. 0.1\nCurrently supports common dice rolls used by the game\nLegend of the Five Rings.\nExamples:\nroll 5k3\nroll 5ke3\nroll5ku3\nThe first example rolls 5 d10 and keeps the highest 3, exploding on 10s,\nThe second rerolls 1's one time simulating emphasis in a skill.\nThe last example has no explosions for rolling unskilled."
+          return "Dice Roller vers. 0.1 Currently supports common dice rolls used by the game Legend of the Five Rings. Examples: roll 5k3 roll 5ke3 roll5ku3 The first example rolls 5 d10 and keeps the highest 3, exploding on 10s, The second rerolls 1's one time simulating emphasis in a skill. The last example has no explosions for rolling unskilled."
         else
           return nil
         end
