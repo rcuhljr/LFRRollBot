@@ -31,31 +31,34 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick} Just Another :Dicebot"
-
+      @connection.speak "USER #{@nick} * * :Dicebot"      
       # TODO: fix join bug
       # TODO: what is the join bug?
       join(@channels)
     end
 
     def join(channels)
-	  if channels.kind_of?(Array) 
-        channels.each do |channel|
-          # join channel
-          @connection.speak "JOIN #{channel}"
-          puts "Joining #{channel}"
-        end 
-	  else
-	    @connection.speak "JOIN #{channels}"
-          puts "Joining #{channels}"
-	  end
+      #if channels.kind_of?(Array) 
+          channels.each do |channel|
+            # join channel
+            @connection.speak "JOIN #{channel}"
+            puts "Joining #{channel}"
+          end 
+     # else
+     #   @connection.speak "JOIN #{channels}"
+     #       puts "Joining #{channels}"
+     # end
     end
     
     def join_quietly(channels)
-      channels.each do |channel|
-        # join channel
-        @connection.speak("JOIN #{channel}", true)
-      end
+     # if channels.kind_of?(Array) 
+        channels.each do |channel|
+          # join channel
+          @connection.speak("JOIN #{channel}", true)
+        end
+     # else
+     #   @connection.speak "JOIN #{channels}"        
+     # end
     end
     
     def run # go
@@ -63,17 +66,17 @@ module DiceBot
       # handle replies
 
       while @running
-        while @connection.disconnected? # never give up reconnect
+        while @connection.disconnected? # never give up reconnect          
           sleep 10
-          connect()
+          connect()          
         end
         
-        handle_msg (@connection.listen)		
+        handle_msg (@connection.listen)
       end
     end
     
     def handle_msg(msg)
-	  puts msg unless msg.nil?
+	  #puts msg unless msg.nil?
       case msg
         when nil
           #nothing
@@ -94,15 +97,15 @@ module DiceBot
       # msg :name, :hostname, :mode, :origin, :privmsg, :text
       #if msg.name == "" && msg.text == ""
       #  quit(msg.text)
-      #end
-     
+      #end      
       if msg.mode == "INVITE"
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
         reply(msg, Helper.new.help($1))
       elsif msg.text =~ /^!(\S+)/
         #implement aliases
-      elsif msg.text =~ /^roll .*/i        
+      elsif msg.text =~ /^roll .*/i  
+        puts "rolling"
         parser = GrammarEngine.new(msg.text)
         begin
           result = parser.execute          
@@ -112,12 +115,7 @@ module DiceBot
           reply(msg, "I had an unexpected error, sorry.")
         end
       end
-    end
-    
-    def command_handler(prefix, command, args)
-      c = CommandHandler.new(prefix, command, args)
-      return c.handle
-    end
+    end    
 
     def reply(msg, message) # reply to a pm or channel message
       if msg.privmsg
