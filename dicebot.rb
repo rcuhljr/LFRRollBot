@@ -11,7 +11,8 @@
 
 require 'socket'
 require 'strscan'
-require 'GrammarEngine'
+#require 'GrammarEngine'
+require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
 
 module DiceBot
   class Client 
@@ -101,9 +102,11 @@ module DiceBot
       if msg.mode == "INVITE"
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
-        reply(msg, Helper.new.help($1))
+        say(msg.origin, Helper.new.help($1))
       elsif msg.text =~ /^!(\S+)/
         rollString = @rollAliases.load(msg.name, $1)
+        reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
+        return unless !rollString.nil?
         parser = GrammarEngine.new(rollString)
         begin
           result = parser.execute          
@@ -130,10 +133,10 @@ module DiceBot
       case text
         when /^@record !(\S+) (roll .*)/i #@record !stuff Roll ...
           @rollAliases.save(msg.name, $1, $2)
+          return "Saved."
         else
           return "I don't recognize that command, sorry."
-        end
-      end
+      end      
     end
 
     def reply(msg, message) # reply to a pm or channel message
@@ -266,7 +269,7 @@ module DiceBot
     def help(command)
       case command.upcase
         when "HELP", "ROLL", "DICE"
-          return "Dice Roller Currently supports common dice rolls used by the game Legend of the Five Rings. Examples: roll 5k3 roll 5ke3 roll5ku3 The first example rolls 5 d10 and keeps the highest 3, exploding on 10s, The second rerolls 1's one time simulating emphasis in a skill. The last example has no explosions for rolling unskilled. The BNF that this bot is being designed around can be found at https://github.com/rcuhljr/LFRRollBot/blob/master/README.txt not all non terminals are implemented."
+          return "L5R Dice Roller. Examples: 'roll 5k3' rolls 5 d10 and keeps the best 3, exploding on 10's. 'roll 5ke3' rerolls 1's one time(emphasis). 'roll 3ku3' this roll has no explosions(unskilled). The BNF that this bot will follow is at found at https://github.com/rcuhljr/LFRRollBot/blob/master/README.txt not all non terminals are implemented."
         else
           return nil
         end
@@ -287,22 +290,25 @@ module DiceBot
   end
   
   class RollAliasMananger    
-    def initiliaze    
+    def initialize    
       @rollAliasFileName = "rollalias.dat"      
       begin
-        @rollAliases DataManager.new.load(@rollAliasFileName)
+        @rollAliases = DataManager.new.load(@rollAliasFileName)
       rescue
         @rollAliases = Hash.new
         @rollAliases["TOKI"] = Hash.new
-        @rollAliases["TOKI"]["!TEST"] = "8k3{ExplodeOn:9} #sample"
+        @rollAliases["TOKI"]["TEST"] = "8k3{ExplodeOn:9} #sample"
         DataManager.new.store(@rollAliasFileName, @rollAliases)
       end    
     end
+    
     def save(name, aliasString, value)
       @rollAliases[name.upcase][aliasString.upcase] = value
+      DataManager.new.store(@rollAliasFileName, @rollAliases)
     end
-    def load(name, aliaString)
-      return @rollAliases[name.upcase][aliasString.upcase]
-    end
+    
+    def load(name, aliasString)    
+      return @rollAliases[name.upcase][aliasString.upcase] unless @rollAliases[name.upcase].nil?
+    end    
   end  
 end

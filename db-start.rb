@@ -4,7 +4,8 @@
 # by Jonathan Drain
 # Adopted as a framework for a new roller by rcuhljr
 
-require 'DiceBot'
+#require 'DiceBot'
+require 'C:\Code\GitRepos\LFRRollBot\DiceBot'
 
 # I recommend that you change the name of your bot and the channels it joins to avoid
 # conflict with other dicebots. Check with your network operator to ensure they allow bots.
@@ -13,7 +14,7 @@ require 'DiceBot'
 # channels too quickly after connecting. Manually encourage it to join with this:
 # /msg bones @@@join #channel
 
-bot_name = "Dice_Eta"
+bot_name = "Dice_Eta_test"
 server_to_join = "irc.sandwich.net"
 port = 6667
 list_of_channels = ["#testchannel2"]
