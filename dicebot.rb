@@ -23,7 +23,7 @@ module DiceBot
       @port = port
       @channels = channels
       @rollAliases = RollAliasMananger.new
-      @rollPrefaces = ["roll"]
+      @rollPrefaces = ["roll", "r"]
       @dicesuke = Hash.new
       connect()
       run()

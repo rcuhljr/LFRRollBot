@@ -81,54 +81,47 @@ class GrammarEngine
 	def Roll(num1, type, num2, options)
     num1 = num1.to_i
     num2 = num2.to_i
-    explodeOn = num2.to_i+1
-    explode = true
-    override = false
-    emphasis = 1    
+    roll = 0
+    keep = 0
+    explodeOn = num2+1
+    explode = true    
+    emphasis = 1            
+    rollOptions = {:explodeOn => explodeOn, :rerollBelow => emphasis, :sidesPerDie => 10}
+    type.upcase.split.each {|typeLetter| 
+      case typeLetter
+        when "D"
+          rollOptions[:sidesPerDie] = num2
+          roll = num1
+          keep = num1
+        when "K"        
+          rollOptions[:explodeOn] = 10 
+          roll = num1
+          keep = num2
+        when "E"
+          rollOptions[:rerollBelow] = 2                    
+        when "U"
+          rollOptions[:explodeOn] = 11           
+        when "D"
+          rollOptions[:explodeOn] = 9          
+        else
+          @failed = true
+          @failText += " I didn't recognize one of your roll types: #{type}."
+          return
+      end
+    }
     if(!options.nil? && options != "")
       options = options[1..options.size-2]
       optionSet = options.split(',')
-      optionSet.each { |x| 
-        puts x
-        couple = x.split(':')
-        puts couple
+      optionSet.each { |x|         
+        couple = x.split(':')        
         case couple[0].upcase
           when "EXPLODEON"
             explodeOn = couple[1].to_i
-            override = true
-          when "EMPHASIS"
-            emphasis = 0 unless couple[1].to_s.upcase == "TRUE"
-          when "EXPLODE"
-            explode = couple[1].to_s.upcase == "TRUE"
+            rollOptions[:explodeOn] = explodeOn          
         end         
       }      
     end
-    if(!explode)
-      explodeOn = num2+1
-    end
-    rollOptions = {:explodeOn => explodeOn, :rerollBelow => emphasis, :sidesPerDie => 10}
-    case type.upcase
-      when "D"
-        rollOptions[:sidesPerDie] = num2
-        rollResult = Dicebox.new.RollKeep(num1.to_i, num1.to_i, rollOptions)
-      when "K"        
-        rollOptions[:explodeOn] = 10 unless override
-        rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
-      when "KE"
-        rollOptions[:rerollBelow] = 2
-        rollOptions[:explodeOn] = 10 unless override
-        rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
-      when "KU"
-        rollOptions[:explodeOn] = 11 
-        rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
-      when "KD"
-        rollOptions[:explodeOn] = 9 
-        rollResult = Dicebox.new.RollKeep(num1.to_i, num2.to_i, rollOptions)
-      else
-        @failed = true
-        @failText += " I didn't recognize one of your roll types: #{type}."
-    end
-    return rollResult
+    return Dicebox.new.RollKeep(roll, keep, rollOptions)
   end
 
   def execute
