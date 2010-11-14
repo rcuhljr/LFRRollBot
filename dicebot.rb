@@ -155,6 +155,9 @@ module DiceBot
         when /^@record !(\S+) (roll .*)/i #@record !stuff Roll ...
           @rollAliases.save(msg.name, $1, $2)
           return "Saved."
+        when /^@remove !(\S+)/i #@remove !alias
+          @rollAliases.remove(msg.name, $1)
+          return "Removed."
         when /^@List/i
           return @rollAliases.list(msg.name)
         when /^@Mode:t\{\S+\}/i
@@ -375,6 +378,11 @@ module DiceBot
     
     def load(name, aliasString)    
       return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil?
+    end    
+    
+    def remove(name, aliasString)    
+      return if @rollAliases[name.upcase].nil?
+      @rollAliases[name.upcase].delete(aliasString.upcase)      
     end    
     
     def list(name)
