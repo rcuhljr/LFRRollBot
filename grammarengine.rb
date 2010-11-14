@@ -54,7 +54,7 @@ class GrammarEngine
       end
     else
       @opCount -= 1
-      if(inStr =~ /([0-9]+)([dkeu]+)([0-9]+)(\{.*\}|$)/i) #<num><type><num>[<options>]
+      if(inStr =~ /([0-9]+)([dkeum]+)([0-9]+)(\{.*\}|$)/i) #<num><type><num>[<options>]
         rollResult = Roll($1,$2,$3,$4);
       elsif(inStr =~ /d([0-9]+)(\{.*\}|$)/i)#<type><num>[<options>]
         rollResult = Roll("1",$1,$2,$3);
@@ -79,6 +79,8 @@ class GrammarEngine
   end
   
 	def Roll(num1, type, num2, options)
+    puts "num1:" + num1
+    puts "num2:" + num2
     num1 = num1.to_i
     num2 = num2.to_i
     roll = 0
@@ -87,7 +89,7 @@ class GrammarEngine
     explode = true    
     emphasis = 1            
     rollOptions = {:explodeOn => explodeOn, :rerollBelow => emphasis, :sidesPerDie => 10}
-    type.upcase.split.each {|typeLetter| 
+    type.upcase.split('').each {|typeLetter| 
       case typeLetter
         when "D"
           rollOptions[:sidesPerDie] = num2
@@ -101,7 +103,7 @@ class GrammarEngine
           rollOptions[:rerollBelow] = 2                    
         when "U"
           rollOptions[:explodeOn] = 11           
-        when "D"
+        when "M"
           rollOptions[:explodeOn] = 9          
         else
           @failed = true

@@ -127,7 +127,7 @@ module DiceBot
         end
       elsif msg.text =~ /^@(\S+)/
         reply(msg, command(msg))
-      elsif msg.text =~ /^(\S+) .*[dkeu][0-9].*/i                  
+      elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i                  
         return unless @rollPrefaces.include?($1)
         parser = GrammarEngine.new(msg.text)
         begin
@@ -137,7 +137,7 @@ module DiceBot
           puts "ERROR: " + e.to_s
           reply(msg, "I had an unexpected error, sorry.")
         end      
-      elsif msg.text =~ /^[0-9]*[dkeu][0-9].*/i  
+      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  
         return if @dicesuke[msg.origin]       
         parser = GrammarEngine.new(msg.text)
         begin
