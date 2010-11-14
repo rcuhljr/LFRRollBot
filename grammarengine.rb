@@ -15,8 +15,11 @@ class GrammarEngine
   
   def rollSplitter
     @rollText.slice!(/^roll /i)
+    @rollText.slice!(/^r /i)    
     @orig = @rollText
     @label = @rollText.slice!(/#.*$/)
+    @label = @label[1..@label.size] unless @label.nil?
+    @label = "" if @label.nil?
     #puts "start state:"+ @rollText
     while(!@rollText.sub!(/([^\s])([+-])([^\s])/){|s| $1 + ' ' + $2 + ' ' +$3}.nil?) do #add a space around + or - signs without one.
       #puts @rollText
@@ -129,13 +132,11 @@ class GrammarEngine
   end
 
   def execute
+    puts "execute:" + @rollText
     rollSplitter
     @atoms.each {|x| evalute x unless @failed}    
     
-    if(@failed)
-      return @failText
-    end
-    return "#{@label[1..@label.size]} #{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}" unless @label.nil?
-    return "#{@orig.delete(' ')} #{@resultString.delete(' ')}:#{@result}"
+    return {:error => true, :message => @failText} if @failed
+    return {:error => false, :message => "#{@label} #{@resultString.delete(' ')}:#{@result}"}    
   end    
 end

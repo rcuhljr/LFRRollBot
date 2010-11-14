@@ -23,7 +23,8 @@ module DiceBot
       @port = port
       @channels = channels
       @rollAliases = RollAliasMananger.new
-
+      @rollPrefaces = ["roll"]
+      @dicesuke = Hash.new
       connect()
       run()
     end
@@ -105,24 +106,43 @@ module DiceBot
         say(msg.origin, Helper.new.help($1)) unless msg.privmsg
         reply(msg,Helper.new.help($1)) unless !msg.privmsg
       elsif msg.text =~ /^!(\S+)/
-        rollString = @rollAliases.load(msg.name, $1)
+        rollString = @rollAliases.load(msg.name, $1).to_s
+        puts "init:" +rollString
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
         return unless !rollString.nil?
+        if(rollString.include?("#") && msg.text.size > ($1.size+1))
+          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")
+          puts "subbed:" +rollString
+        elsif(msg.text.size > ($1.size+1))
+          rollString = rollString + msg.text[$1.size,mst.text.size]
+          puts "appended:" +rollString
+        end
         parser = GrammarEngine.new(rollString)
         begin
           result = parser.execute          
-          reply(msg, result)
+          putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
           reply(msg, "I had an unexpected error, sorry.")
         end
       elsif msg.text =~ /^@(\S+)/
         reply(msg, command(msg))
-      elsif msg.text =~ /^roll .*[dkeu][0-9].*/i          
+      elsif msg.text =~ /^(\S+) .*[dkeu][0-9].*/i                  
+        return unless @rollPrefaces.include?($1)
         parser = GrammarEngine.new(msg.text)
         begin
           result = parser.execute          
-          reply(msg, result)
+          putRoll(msg, result)
+        rescue Exception => e
+          puts "ERROR: " + e.to_s
+          reply(msg, "I had an unexpected error, sorry.")
+        end      
+      elsif msg.text =~ /^[0-9]*[dkeu][0-9].*/i  
+        return if @dicesuke[msg.origin]       
+        parser = GrammarEngine.new(msg.text)
+        begin
+          result = parser.execute          
+          putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
           reply(msg, "I had an unexpected error, sorry.")
@@ -137,9 +157,28 @@ module DiceBot
           return "Saved."
         when /^@List/i
           return @rollAliases.list(msg.name)
+        when /^@Mode:t\{\S+\}/i
+          if $1 =~ /list/i
+            return "Currently looking for:" + @rollPrefaces.to_s
+          end
+          setMode msg.text
+          return "Set."
         else
           return "I don't recognize that command, sorry."
       end      
+    end
+    
+    def setMode(text)
+      results = text.split(':')
+      @rollPrefaces = Array.new
+      results.each { |x| 
+      case x
+        when /r/i
+          @rollPrefaces << "r" unless @rollPrefaces.include?("r")        
+        when /roll/i
+          @rollPrefaces << "roll" unless @rollPrefaces.include?("roll")        
+      end
+      }
     end
 
     def reply(msg, message) # reply to a pm or channel message
@@ -147,6 +186,16 @@ module DiceBot
         @connection.speak "#{msg.mode} #{msg.name} :#{message}"
       else
         @connection.speak "#{msg.mode} #{msg.origin} :#{msg.name}, #{message}"
+      end
+    end
+    
+    def putRoll(msg, result)        
+      if msg.privmsg
+        @connection.speak "#{msg.mode} #{msg.name} :#{result[:message]}" if result[:error]
+        @connection.speak "#{msg.mode} #{msg.name} :\x01ACTION#{result[:message]}\x01" unless result[:error]
+      else
+        @connection.speak "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name}, #{result[:message]}\x01" unless result[:error]
+        @connection.speak "#{msg.mode} #{msg.origin} :#{msg.name}, #{result[:message]}" if result[:error]
       end
     end
     
@@ -189,7 +238,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -201,6 +250,16 @@ module DiceBot
           end
           @text = $6.chomp
           print()
+      end
+      
+      if(@mode == "353")
+        @dicesuke[@origin] = true if @text =~ /dicesuke/i
+      end
+      if(@mode == "PART")
+        @dicesuke[@origin] = false if @name =~ /dicesuke/i
+      end
+      if(@mode == "JOIN")
+        @dicesuke[@origin] = true if @name =~ /dicesuke/i
       end
     end
 
@@ -309,12 +368,13 @@ module DiceBot
     end
     
     def save(name, aliasString, value)
+      @rollAliases[name.upcase] = Hash.new if @rollAliases[name.upcase].nil?
       @rollAliases[name.upcase][aliasString.upcase] = value
       DataManager.new.store(@rollAliasFileName, @rollAliases)
     end
     
     def load(name, aliasString)    
-      return @rollAliases[name.upcase][aliasString.upcase] unless @rollAliases[name.upcase].nil?
+      return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil?
     end    
     
     def list(name)

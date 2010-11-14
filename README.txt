@@ -2,13 +2,14 @@ L5R Roller design and grammar for Rolls.
 
 
 Roll Bot Grammar (Case Insensitive, broken down to regexes) -
-<Request>           ::= <Alias> | <Roll Request> | @<Command> | ?<Help>
-<Roll Request>      ::= Roll <Roll Base> <Roll Label>
-<Roll Base>         ::= <Roll Base><Operator><Roll Base> | <Roll Base><Roll Options> |
-                        <Number><Inner Roll Type><Number> | <Outer Roll Type><Number> | <Number>
+<Request>           ::= <Alias> | <Alias><OperatiorPair> | <Roll Request> | @<Command> | ?<Help>
+<Roll Request>      ::= <Trigger> <Roll Base> <Roll Label>
+<Roll Base>         ::= <Roll Base><Operator><Roll Base> | < | <Roll Base><Roll Options> |
+                        <Number><Inner Roll Type><Number> | <Outer Roll Type><Number> | <Number>  
+<OperatorPair>      ::= <Operator><number> | <OperatorPair><OperatorPair>
 <Roll Options>      ::= {<Option>} | "" | {<Alias>}
 <Option>            ::= <Option>, <Option> | <Setting>:<Value>
-<Inner Roll Type>   ::= d | k | ke | ku
+<Inner Roll Type>   ::= d | k | ke | ku | kd
 <Outer Roll Type>   ::= d
 <Alias>             ::= !<Identifier>
 <Roll Label>        ::= #<String> | ""
@@ -22,8 +23,9 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | 
                         Record <Identifier> <Roll Options>
 <Help>              ::= Help | Roll | Dice
-<Mode>              ::= L5R | D&D | T{<TriggerString>}
-<TriggerString>     ::= roll | r | !r | !roll
+<Mode>              ::= L5R | D&D | T{<TriggerString>} | T{List}
+<Trigger>           ::= r | roll | ""
+<TriggerString>     ::= <Trigger> | <TriggerString>:<TriggerString>
 
-Notes. ke = keep emphasis, ku keep unskilled (no explosions) 
+Notes. ke = keep emphasis, ku keep unskilled (no explosions) kd = explode on 9's no emphasis. "" is only valid as a trigger if Dicesuke isn't in the same channel to prevent spam/confusion.
 Slight grammar mistake in the fact that you can attach a roll options to a number, but I don't feel bad about that.
