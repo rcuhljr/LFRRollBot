@@ -1,13 +1,11 @@
 #!/usr/env ruby
 #
-# bones v0.03
-# by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
-# 
 #
 # NB: As a security measure, some IRC networks prevent IRC bots from joining
 # channels too quickly after connecting. Solve with this:
 # /invite botname
 # adapted by rcuhljr for the purposes of an L5R specific dice roller.
+# Communication code and base framework adapted from code by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
 
 require 'socket'
 require 'strscan'
