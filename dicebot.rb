@@ -160,7 +160,7 @@ module DiceBot
           return "Removed."
         when /^@List/i
           return @rollAliases.list(msg.name)
-        when /^@Mode:t\{\S+\}/i
+        when /^@Mode:t\{(\S+)\}/i
           if $1 =~ /list/i
             return "Currently looking for:" + @rollPrefaces.to_s
           end
