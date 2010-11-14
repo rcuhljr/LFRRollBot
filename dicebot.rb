@@ -239,7 +239,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN|QUIT) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -256,7 +256,7 @@ module DiceBot
       if(@mode == "353")
         @dicesuke[@origin] = true if @text =~ /dicesuke/i
       end
-      if(@mode == "PART")
+      if(@mode == "PART" || @mode == "QUIT")
         @dicesuke[@origin] = false if @name =~ /dicesuke/i
       end
       if(@mode == "JOIN")
