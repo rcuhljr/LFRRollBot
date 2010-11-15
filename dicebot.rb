@@ -11,11 +11,14 @@ require 'socket'
 require 'strscan'
 #require 'GrammarEngine'
 require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+require 'C:\Code\GitRepos\LFRRollBot\InputReader'
 
 module DiceBot
   class Client 
     def initialize(nick, server, port, channels)
-      @running = true            
+      @running = {:state => true}
+      @canSend = {:state => false}
+      @outputBuffer = [""]
       @nick = nick
       @server = server # one only
       @port = port
@@ -24,6 +27,7 @@ module DiceBot
       @rollPrefaces = ["roll", "r"]
       @dicesuke = Hash.new
       connect()
+      Thread.new{InputReader.new(@canSend, @outputBuffer, @running)}
       run()
     end
 
@@ -65,12 +69,12 @@ module DiceBot
       # stay connected
       # handle replies
 
-      while @running
+      while @running[:state]
         while @connection.disconnected? # never give up reconnect          
           sleep 10
           connect()          
         end
-        
+        speak_input() if @canSend[:state]
         handle_msg (@connection.listen)
       end
     end
@@ -201,11 +205,18 @@ module DiceBot
     end
     
     def pm(person, message)
+      person = @channels[0] if person =~ /:/
       @connection.speak "PRIVMSG #{person} :#{message}"
     end
     
     def say(channel, message)
       pm(channel, message) # they're functionally the same
+    end
+    
+    def speak_input()             
+        pm(@outputBuffer[0].slice(/^\S+/i), @outputBuffer[0].slice(/ .*/)) 
+        @outputBuffer[0] = ""
+        @canSend[:state] = false        
     end
     
     def notice(person, message)
