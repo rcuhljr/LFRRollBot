@@ -4,8 +4,8 @@
 # by Jonathan Drain
 # Adopted as a framework for a new roller by rcuhljr
 
-require 'DiceBot'
-#require 'C:\Code\GitRepos\LFRRollBot\DiceBot'
+#require 'DiceBot'
+require 'C:\Code\GitRepos\LFRRollBot\DiceBot'
 
 # I recommend that you change the name of your bot and the channels it joins to avoid
 # conflict with other dicebots. Check with your network operator to ensure they allow bots.

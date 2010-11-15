@@ -9,8 +9,8 @@
 
 require 'socket'
 require 'strscan'
-require 'GrammarEngine'
-#require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+#require 'GrammarEngine'
+require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
 
 module DiceBot
   class Client 
