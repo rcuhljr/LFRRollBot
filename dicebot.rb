@@ -105,8 +105,7 @@ module DiceBot
       if msg.mode == "INVITE"
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
-        say(msg.origin, Helper.new.help($1)) unless msg.privmsg
-        reply(msg,Helper.new.help($1)) unless !msg.privmsg
+        reply_array(msg, Helper.new.help($1))        
       elsif msg.text =~ /^!(\S+)/
         rollString = @rollAliases.load(msg.name, $1).to_s
         puts "init:" +rollString
@@ -195,12 +194,26 @@ module DiceBot
       end
     end
     
+    def reply_array(msg, message) # reply to a pm or channel message
+      if msg.privmsg
+        message.each { |x|
+        @connection.speak "#{msg.mode} #{msg.name} :#{x.chomp}"
+        sleep(0.25)
+        }
+      else
+        message.each { |x|
+        @connection.speak "#{msg.mode} #{msg.origin} :#{x.chomp}"
+        sleep(0.25)
+        }
+      end
+    end
+    
     def putRoll(msg, result)        
       if msg.privmsg
         @connection.speak "#{msg.mode} #{msg.name} :#{result[:message]}" if result[:error]
-        @connection.speak "#{msg.mode} #{msg.name} :\x01ACTION#{result[:message]}\x01" unless result[:error]
+        @connection.speak "#{msg.mode} #{msg.name} :\x01ACTION rolls the dice for you. #{result[:message]}\x01" unless result[:error]
       else
-        @connection.speak "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name}, #{result[:message]}\x01" unless result[:error]
+        @connection.speak "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01" unless result[:error]
         @connection.speak "#{msg.mode} #{msg.origin} :#{msg.name}, #{result[:message]}" if result[:error]
       end
     end
@@ -212,12 +225,28 @@ module DiceBot
     
     def say(channel, message)
       pm(channel, message) # they're functionally the same
+      sleep(0.25)
     end
     
-    def speak_input()             
-        pm(@outputBuffer[0].slice(/^\S+/i), @outputBuffer[0].slice(/ .*/)) 
+    def say_array(channel, message)
+      message.each { |x|
+        pm(channel, x.chomp) # they're functionally the same
+        sleep(0.25)
+      }
+    end
+    
+    def speak_input() 
+      target = @outputBuffer[0].slice(/^\S+/i)      
+      message = @outputBuffer[0].slice(/ .*/)
+      if (@outputBuffer[0].slice(/^\S+/i) =~ /join/i)
+        join message
         @outputBuffer[0] = ""
-        @canSend[:state] = false        
+        @canSend[:state] = false  
+        return
+      end
+      pm(target, message) 
+      @outputBuffer[0] = ""
+      @canSend[:state] = false        
     end
     
     def notice(person, message)
@@ -356,7 +385,7 @@ module DiceBot
       case command.upcase
         when "HELP", "ROLL", "DICE"
           dataFile = File.new("help.txt","r")
-          val = dataFile.gets
+          val = dataFile.readlines
           dataFile.close
           return val          
         else

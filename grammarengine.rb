@@ -132,6 +132,6 @@ class GrammarEngine
     @atoms.each {|x| evalute x unless @failed}    
     
     return {:error => true, :message => @failText} if @failed
-    return {:error => false, :message => "#{@label} #{@resultString.delete(' ')}:#{@result}"}    
+    return {:error => false, :message => "#{@label} #{@orig} #{@resultString.delete(' ')}:#{@result}"}    
   end    
 end
