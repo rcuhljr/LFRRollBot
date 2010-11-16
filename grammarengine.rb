@@ -130,8 +130,9 @@ class GrammarEngine
     puts "execute:" + @rollText
     rollSplitter
     @atoms.each {|x| evalute x unless @failed}    
-    
     return {:error => true, :message => @failText} if @failed
-    return {:error => false, :message => "#{@label} #{@orig} #{@resultString.delete(' ')}:#{@result}"}    
+    aMessage = "#{@label} #{@orig} #{@resultString.delete(' ')}:#{@result}"
+    aMessage = "#{@label} #{@orig} for a total of #{@result}" if (aMessage.size > 400)
+    return {:error => false, :message => aMessage}    
   end    
 end
