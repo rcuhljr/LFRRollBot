@@ -89,7 +89,7 @@ module DiceBot
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
         when /^:/ # msg
-          message = Message.new(msg)
+          message = Message.new(msg, @dicesuke)
           respond(message)
         else
           puts "RAW>> #{msg}"
@@ -140,7 +140,8 @@ module DiceBot
           reply(msg, "I had an unexpected error, sorry.")
         end      
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  
-        return if @dicesuke[msg.origin]       
+        puts "dice check:" + msg.origin
+        return if @dicesuke[msg.origin.upcase]       
         parser = GrammarEngine.new(msg.text)
         begin
           result = parser.execute          
@@ -233,8 +234,9 @@ module DiceBot
   class Message
     attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text
     
-    def initialize(msg)
-      parse(msg)
+    def initialize(msg, dicesuke)
+      @dicesuke = dicesuke
+      parse(msg)      
     end
     
     def parse(msg)
@@ -250,7 +252,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN|QUIT) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN|QUIT) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -261,11 +263,21 @@ module DiceBot
             @privmsg = true
           end
           @text = $6.chomp
-          print()
+          print()        
+        when /^:(\S+) ([0-9]+) (.*) ((#?)\S+) :(.+)/          
+          @origin = $4
+          @mode = $2                    
+          if ($5 == "#")
+            @privmsg = false
+          else
+            @privmsg = true
+          end
+          @text = $6.chomp
       end
       
       if(@mode == "353")
-        @dicesuke[@origin] = true if @text =~ /dicesuke/i
+        puts "o:"+ @origin + "m:" + @mode +"t:" +@text
+        @dicesuke[@origin.upcase] = true if @text =~ /dicesuke/i
       end
       if(@mode == "PART" || @mode == "QUIT")
         @dicesuke[@origin] = false if @name =~ /dicesuke/i

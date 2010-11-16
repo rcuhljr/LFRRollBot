@@ -8,6 +8,7 @@ class InputReader
 
   def run
     while(@running[:state])
+      sleep(0.1)
       next if @canSend[:state]
       @outputBuffer[0] = gets.chomp      
       if(@outputBuffer[0] =~ /^quit/i)
