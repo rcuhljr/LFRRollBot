@@ -47,10 +47,12 @@ module DiceBot
             # join channel
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
+            Logger.new.log("Joining #{channel}")
           end 
       else
         @connection.speak "JOIN #{channels}"
             puts "Joining #{channels}"
+            Logger.new.log("Joining #{channels}")
       end
     end
     
@@ -80,11 +82,12 @@ module DiceBot
     end
     
     def handle_msg(msg)
-	  puts msg unless msg.nil?
+	  Logger.new.log(msg) unless msg.nil?
       case msg
         when nil
           #nothing
         when /^PING (.+)$/
+          puts "PONGED #{Time.new}"
           @connection.speak("PONG #{$1}", true) # PING? PONG!
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
@@ -98,25 +101,18 @@ module DiceBot
     end
     
     def respond(msg)
-      # msg :name, :hostname, :mode, :origin, :privmsg, :text
-      #if msg.name == "" && msg.text == ""
-      #  quit(msg.text)
-      #end      
       if msg.mode == "INVITE"
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
         reply_array(msg, Helper.new.help($1))        
       elsif msg.text =~ /^!(\S+)/
-        rollString = @rollAliases.load(msg.name, $1).to_s
-        puts "init:" +rollString
+        rollString = @rollAliases.load(msg.name, $1).to_s        
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
         return unless !rollString.nil?
         if(rollString.include?("#") && msg.text.size > ($1.size+1))
-          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")
-          puts "subbed:" +rollString
+          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")          
         elsif(msg.text.size > ($1.size+1))
-          rollString = rollString + msg.text[$1.size,mst.text.size]
-          puts "appended:" +rollString
+          rollString = rollString + msg.text[$1.size,mst.text.size]          
         end
         parser = GrammarEngine.new(rollString)
         begin
@@ -124,6 +120,7 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
+          Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end
       elsif msg.text =~ /^@(\S+)/
@@ -136,10 +133,10 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
+          Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end      
-      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  
-        puts "dice check:" + msg.origin
+      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i          
         return if @dicesuke[msg.origin.upcase]       
         parser = GrammarEngine.new(msg.text)
         begin
@@ -147,6 +144,7 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
+          Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end
       end
@@ -304,8 +302,7 @@ module DiceBot
           @text = $6.chomp
       end
       
-      if(@mode == "353")
-        puts "o:"+ @origin + "m:" + @mode +"t:" +@text
+      if(@mode == "353")        
         @dicesuke[@origin.upcase] = true if @text =~ /dicesuke/i
       end
       if(@mode == "PART" || @mode == "QUIT")
@@ -379,7 +376,7 @@ module DiceBot
       end
     end
   end
-  #Todo move help texts out to txt files.
+  
   class Helper
     def help(command)
       case command.upcase
@@ -391,6 +388,15 @@ module DiceBot
         else
           return nil
         end
+    end
+  end
+
+  class Logger
+    def log(text)   
+      stamp = Time.new
+      dataFile = File.new("logs\\#{stamp.strftime("%Y%m%d")}.log","a")
+      dataFile.puts "#{stamp.strftime("%H:%M:%S")}-#{text}"
+      dataFile.close
     end
   end
   
