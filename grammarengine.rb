@@ -67,10 +67,10 @@ class GrammarEngine
     end
     case @opVal
       when /\+/
-        puts "adding:" + rollResult[:total].to_s        
+        #puts "adding:" + rollResult[:total].to_s        
         @result += rollResult[:total]        
       when /\-/
-        puts "subtracting:" + rollResult[:total].to_s
+        #puts "subtracting:" + rollResult[:total].to_s
         @result -= rollResult[:total]
     end 
     if(!rollResult[:values].nil? && rollResult[:values] != "")    
@@ -79,8 +79,8 @@ class GrammarEngine
   end
   
 	def Roll(num1, type, num2, options)
-    puts "num1:" + num1
-    puts "num2:" + num2
+    #puts "num1:" + num1
+    #puts "num2:" + num2
     num1 = num1.to_i
     num2 = num2.to_i
     roll = 0
@@ -126,8 +126,7 @@ class GrammarEngine
     return Dicebox.new.RollKeep(roll, keep, rollOptions)
   end
 
-  def execute
-    puts "execute:" + @rollText
+  def execute    
     rollSplitter
     @atoms.each {|x| evalute x unless @failed}    
     return {:error => true, :message => @failText} if @failed
