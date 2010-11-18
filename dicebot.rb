@@ -105,7 +105,7 @@ module DiceBot
         join msg.text
       elsif msg.text =~ /^\?(\S+)/
         reply_array(msg, Helper.new.help($1))        
-      elsif msg.text =~ /^!(\S+)/
+      elsif msg.text =~ /^!([a-z0-9()-_]+)$/
         rollString = @rollAliases.load(msg.name, $1).to_s        
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
         return unless !rollString.nil?

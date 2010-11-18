@@ -131,8 +131,8 @@ class GrammarEngine
     rollSplitter
     @atoms.each {|x| evalute x unless @failed}    
     return {:error => true, :message => @failText} if @failed
-    aMessage = "#{@label} #{@orig} #{@resultString.delete(' ')}:#{@result}"
-    aMessage = "#{@label} #{@orig} for a total of #{@result}" if (aMessage.size > 400)
+    aMessage = "(#{@label+":" unless @label.nil?}#{@orig}) #{@resultString.delete(' ')}:#{@result}"
+    aMessage = "(#{@label+":" unless @label.nil?}#{@orig}) for a total of #{@result}" if (aMessage.size > 400) #not the best fix, since we don't know how long someones name is, thus we don't know the beginning length of the string. seems to catch the worst cases.
     return {:error => false, :message => aMessage}    
   end    
 end
