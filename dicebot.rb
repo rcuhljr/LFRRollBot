@@ -26,6 +26,7 @@ module DiceBot
       @rollAliases = RollAliasMananger.new
       @rollPrefaces = ["roll", "r"]
       @dicesuke = Hash.new
+      @lastPong = Time.new
       connect()
       Thread.new{InputReader.new(@canSend, @outputBuffer, @running)}
       run()
@@ -72,29 +73,33 @@ module DiceBot
       # handle replies
 
       while @running[:state]
-        while @connection.disconnected? # never give up reconnect          
+        while @connection.disconnected? || (Time.new-@lastPong) > 600 # never give up reconnect          
           sleep 10
-          connect()          
+          connect()   
+          puts "reconnecting: #{@lastPong}"
+          @lastPong == Time.new
         end
         speak_input() if @canSend[:state]
         handle_msg (@connection.listen)
       end
     end
     
-    def handle_msg(msg)
-	  Logger.new.log(msg) unless msg.nil?
+    def handle_msg(msg)	   
       case msg
         when nil
           #nothing
         when /^PING (.+)$/
-          puts "PONGED #{Time.new}"
+          @lastPong = Time.new
+          puts "PONGED #{@lastPong}"
           @connection.speak("PONG #{$1}", true) # PING? PONG!
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
         when /^:/ # msg
+          Logger.new.log(msg)
           message = Message.new(msg, @dicesuke)
           respond(message)
         else
+          Logger.new.log("RAW>>"+msg)
           puts "RAW>> #{msg}"
           #nothing
       end
@@ -103,16 +108,24 @@ module DiceBot
     def respond(msg)
       if msg.mode == "INVITE"
         join msg.text
+      elsif msg.text =~ /^@join (#.*)$/
+        join $1.to_s
       elsif msg.text =~ /^\?(\S+)/
         reply_array(msg, Helper.new.help($1))        
-      elsif msg.text =~ /^!([a-z0-9()-_]+)$/
-        rollString = @rollAliases.load(msg.name, $1).to_s        
+      elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/
+        rollString = @rollAliases.load(msg.name, $1)        
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
         return unless !rollString.nil?
-        if(rollString.include?("#") && msg.text.size > ($1.size+1))
-          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")          
-        elsif(msg.text.size > ($1.size+1))
-          rollString = rollString + msg.text[$1.size,mst.text.size]          
+        #rollString += $2 unless $2.nil?
+        puts "rollstring:#{rollString}"
+        if(rollString.include?("#") && !$2.nil? && $2.include?("#"))
+          rollString.sub!(/#.*/, msg.text[$1.size+1,msg.text.size])        
+          puts "rollstring:#{rollString}"   
+        elsif(rollString.include?("#"))
+          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")        
+          puts "rollstring2:#{rollString}"   
+        elsif(msg.text.size+1 > ($1.size))
+          rollString = rollString + msg.text[$1.size+1,msg.text.size]                    
         end
         parser = GrammarEngine.new(rollString)
         begin
@@ -124,7 +137,7 @@ module DiceBot
           reply(msg, "I had an unexpected error, sorry.")
         end
       elsif msg.text =~ /^@(\S+)/
-        reply(msg, command(msg))
+        reply(msg, command(msg)) unless msg.mode == "353"
       elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i                  
         return unless @rollPrefaces.include?($1)
         parser = GrammarEngine.new(msg.text)
@@ -279,7 +292,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN|QUIT) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -300,13 +313,20 @@ module DiceBot
             @privmsg = true
           end
           @text = $6.chomp
+        when /^:(\S+)!(\S+) (JOIN|QUIT) :(.+)/          
+          @name = $1
+          @mode = $3  
+          @origin = $4
       end
-      
+      #puts "#{@mode} - #{@name} - #{@origin}"
       if(@mode == "353")        
         @dicesuke[@origin.upcase] = true if @text =~ /dicesuke/i
       end
-      if(@mode == "PART" || @mode == "QUIT")
+      if(@mode == "PART")
         @dicesuke[@origin] = false if @name =~ /dicesuke/i
+      end
+      if(@mode == "QUIT")
+        @dicesuke = Hash.new if @name =~ /dicesuke/i
       end
       if(@mode == "JOIN")
         @dicesuke[@origin] = true if @name =~ /dicesuke/i
@@ -432,8 +452,10 @@ module DiceBot
       DataManager.new.store(@rollAliasFileName, @rollAliases)
     end
     
-    def load(name, aliasString)    
-      return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil?
+    def load(name, aliasString) 
+       puts name
+       puts aliasString
+      return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil? or @rollAliases[name.upcase][aliasString.upcase].nil?
     end    
     
     def remove(name, aliasString)    
