@@ -249,7 +249,7 @@ module DiceBot
     def speak_input() 
       target = @outputBuffer[0].slice(/^\S+/i)      
       message = @outputBuffer[0].slice(/ .*/)
-      if (@outputBuffer[0].slice(/^\S+/i) =~ /join/i)
+      if (target =~ /join/i)
         join message
         @outputBuffer[0] = ""
         @canSend[:state] = false  
