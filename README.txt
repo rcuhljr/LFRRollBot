@@ -21,7 +21,8 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 <Operator>          ::= + | -
 <Setting>           ::= ExplodeOn
 <Boolean>           ::= true | false
-<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier>                          
+<Command>           ::= Record <Identifier> <Roll Request> | Mode:<Mode> | List | Remove <Identifier> | 
+                        Record <Identifier> <Roll Options>
 <Help>              ::= Help | Roll | Dice
 <Mode>              ::= T{<TriggerString>} | T{List}
 <Trigger>           ::= r | roll | ""
