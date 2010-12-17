@@ -9,7 +9,10 @@ class Dicebox
   def RollKeep(rolled, kept, modifiers = {})    
     result = {:total => 0, :values => []}    
     explosionCount = 0    
-    
+    if(rolled > 100 or modifiers[:sidesPerDie] > 10000)
+      result[:values] = "A_LOT_OF_DICE"
+      return result
+    end
     return result unless (kept > 0 and rolled > 0) # idiot check
     
     kept = rolled unless rolled >= kept #idiot check 2
