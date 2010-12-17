@@ -1,11 +1,13 @@
 #!/usr/env ruby
 #
+# bones v0.03
+# by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
+# 
 #
 # NB: As a security measure, some IRC networks prevent IRC bots from joining
 # channels too quickly after connecting. Solve with this:
 # /invite botname
 # adapted by rcuhljr for the purposes of an L5R specific dice roller.
-# Communication code and base framework adapted from code by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
 
 require 'socket'
 require 'strscan'
@@ -158,7 +160,7 @@ module DiceBot
           return "Removed."
         when /^@List/i
           return @rollAliases.list(msg.name)
-        when /^@Mode:t\{(\S+)\}/i
+        when /^@Mode:t\{\S+\}/i
           if $1 =~ /list/i
             return "Currently looking for:" + @rollPrefaces.to_s
           end
@@ -239,7 +241,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN|QUIT) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|[0-9]|PART|JOIN) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -256,7 +258,7 @@ module DiceBot
       if(@mode == "353")
         @dicesuke[@origin] = true if @text =~ /dicesuke/i
       end
-      if(@mode == "PART" || @mode == "QUIT")
+      if(@mode == "PART")
         @dicesuke[@origin] = false if @name =~ /dicesuke/i
       end
       if(@mode == "JOIN")
@@ -378,10 +380,7 @@ module DiceBot
       return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil?
     end    
     
-    def remove(name, aliasString)    
-      return if @rollAliases[name.upcase].nil?
-      @rollAliases[name.upcase].delete(aliasString.upcase)      
-    end    
+    
     
     def list(name)
       return "No aliases found." if @rollAliases[name.upcase].nil?
