@@ -1,5 +1,5 @@
-require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-#require 'Dicebox'
+#require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
+require 'Dicebox'
 
 class GrammarEngine
   def initialize(msg)

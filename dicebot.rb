@@ -11,9 +11,10 @@
 
 require 'socket'
 require 'strscan'
-#require 'GrammarEngine'
-require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
-require 'C:\Code\GitRepos\LFRRollBot\InputReader'
+require 'GrammarEngine'
+require 'InputReader'
+#require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+#require 'C:\Code\GitRepos\LFRRollBot\InputReader'
 
 module DiceBot
   class Client 
@@ -417,7 +418,7 @@ module DiceBot
     def log(text)   
       stamp = Time.new
       dataFile = File.new("logs\\#{stamp.strftime("%Y%m%d")}.log","a")
-      dataFile.put "#{stamp.strftime("%H:%M:%S")}-#{text}"
+      dataFile.write "#{stamp.strftime("%H:%M:%S")}-#{text}"
       dataFile.close
     end
   end
