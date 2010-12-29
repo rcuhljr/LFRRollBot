@@ -76,11 +76,11 @@ module DiceBot
       # handle replies
 
       while @running[:state]
-        while @connection.disconnected? || (Time.new-@lastPong) > 600 # never give up reconnect          
+        while @connection.disconnected? #|| (Time.new-@lastPong) > 600 # never give up reconnect          
           sleep 10
           connect()   
-          puts "reconnecting: #{@lastPong}"
-          @lastPong == Time.new
+          #puts "reconnecting: #{@lastPong}"
+          #@lastPong == Time.new
         end
         speak_input() if @canSend[:state]
         handle_msg (@connection.listen)
