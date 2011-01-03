@@ -1,7 +1,7 @@
 #!/usr/env ruby
 # bones v0.03
 # by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot #
-# adapted by rcuhljr for the purposes of an L5R specific dice roller.
+# adapted by Robert Uhl for the purposes of an L5R specific dice roller.
 
 require 'socket'
 require 'strscan'
@@ -11,6 +11,7 @@ load 'GrammarEngine.rb'
 load 'InputReader.rb'
 load 'RollAliasManager.rb'
 load 'Utilities.rb'
+load 'Connection.rb'
 
 module DiceBot
   class Client 
@@ -108,58 +109,42 @@ module DiceBot
     def respond(msg)
       if msg.mode == "INVITE"
         join msg.text
-      elsif msg.text =~ /^@join (#.*)$/
+      elsif msg.text =~ /^@join (#.*)$/  #someone messaged him with @join #channel
         join $1.to_s
-      elsif msg.text =~ /^\?(\S+)/
+      elsif msg.text =~ /^\?(\S+)/ #help command
         reply_array(msg, Utilities::Helper.new.help($1))        
-      elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/
+      elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/ #a roll alias name, possibly followed by additional dice and or a label
         rollString = @rollAliases.load(msg.name, $1)        
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
-        return unless !rollString.nil?
-        #rollString += $2 unless $2.nil?
-        puts "rollstring:#{rollString}"
-        if(rollString.include?("#") && !$2.nil? && $2.include?("#"))
-          rollString.sub!(/#.*/, msg.text[$1.size+1,msg.text.size])        
-          puts "rollstring:#{rollString}"   
-        elsif(rollString.include?("#"))
-          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")        
-          puts "rollstring2:#{rollString}"   
-        elsif(msg.text.size+1 > ($1.size))
+        return unless !rollString.nil?                
+        if(rollString.include?("#") && !$2.nil? && $2.include?("#")) #if there's already a label in the alias and they added a new label, combine them.
+          rollString.sub!(/#.*/, msg.text[$1.size+1,msg.text.size])                  
+        elsif(rollString.include?("#")) #if there's just a label in the stored alias, insert any dice rolls into the roll string ahead of the label
+          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")    
+        elsif(msg.text.size+1 > ($1.size)) #if the rollstring has no label just tack on whatever they added to the alias.
           rollString = rollString + msg.text[$1.size+1,msg.text.size]                    
         end
-        parser = GrammarEngine.new(rollString)
-        begin
-          result = parser.execute          
-          putRoll(msg, result)
-        rescue Exception => e
-          puts "ERROR: " + e.to_s
-          Utilities::Logger.new.log("ERROR: " + e.to_s)
-          reply(msg, "I had an unexpected error, sorry.")
-        end
-      elsif msg.text =~ /^@(\S+)/
+        respond_roll(rollString, msg)        
+      elsif msg.text =~ /^@(\S+)/ #commands from the users, also incidently operator users in the 353 channel user listing mode
         reply(msg, command(msg)) unless msg.mode == "353"
-      elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i                  
+      elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.                  
         return unless @rollPrefaces.include?($1)
-        parser = GrammarEngine.new(msg.text)
-        begin
-          result = parser.execute          
-          putRoll(msg, result)
-        rescue Exception => e
-          puts "ERROR: " + e.to_s
-          Utilities::Logger.new.log("ERROR: " + e.to_s)
-          reply(msg, "I had an unexpected error, sorry.")
-        end      
-      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i          
+        respond_roll(rollString, msg)
+      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
         return if @dicesuke[msg.origin.upcase]       
-        parser = GrammarEngine.new(msg.text)
-        begin
-          result = parser.execute          
-          putRoll(msg, result)
-        rescue Exception => e
-          puts "ERROR: " + e.to_s
-          Utilities::Logger.new.log("ERROR: " + e.to_s)
-          reply(msg, "I had an unexpected error, sorry.")
-        end
+        respond_roll(rollString, msg)
+      end
+    end   
+    
+    def respond_roll(rollstring, msg)
+      parser = GrammarEngine.new(rollstring)
+      begin
+        result = parser.execute          
+        putRoll(msg, result)
+      rescue Exception => e
+        puts "ERROR: " + e.to_s
+        Utilities::Logger.new.log("ERROR: " + e.to_s)
+        reply(msg, "I had an unexpected error, sorry.")
       end
     end    
     
@@ -241,7 +226,7 @@ module DiceBot
     
     def say_array(channel, message)
       message.each { |x|
-        pm(channel, x.chomp) # they're functionally the same
+        pm(channel, x.chomp) 
         sleep(0.25)
       }
     end
@@ -286,9 +271,7 @@ module DiceBot
       # sample messages:
       # :JDigital!~JD@86.156.2.220 PRIVMSG #bones :hi
       # :JDigital!~JD@86.156.2.220 PRIVMSG bones :hi
-      
-      # filter out bold and colour
-      # feature suggested by KT
+
       msg = msg.gsub(/\x02/, '') # bold
       msg = msg.gsub(/\x03(\d)?(\d)?/, '') # colour
 
@@ -321,7 +304,7 @@ module DiceBot
           @mode = $3  
           @origin = $4
       end
-      #puts "#{@mode} - #{@name} - #{@origin}"
+      
       if(@mode == "353")        
         @dicesuke[@origin.upcase] = true if @text =~ /dicesuke/i
       end
@@ -338,65 +321,6 @@ module DiceBot
 
     def print
       puts "[#{@origin}|#{@mode}] <#{@name}> #{@text}"
-    end
-  end
-  
-  class Connection # a connection to an IRC server; only one so far
-    attr_reader :disconnected
-
-    def initialize(server, port)
-      @server = server
-      @port = port
-      @disconnected = false
-      connect()
-    end
-    
-    def connect
-      # do some weird stuff with ports
-      @socket = TCPSocket.open(@server, @port)
-      puts "hammer connected!"
-      @disconnected = false
-    end
-
-    def disconnected? # inadvertently disconnected
-      return @socket.closed? || @disconnected
-    end
-
-    def disconnect
-      @socket.close
-    end
-
-    def speak(msg,quietly = nil)
-      begin
-        if quietly != true
-          puts("spoke>> " + msg)
-        end
-        @socket.write(msg + "\n")
-      rescue Errno::ECONNRESET
-        @disconnected = true;
-      end 
-    end
-  
-    def listen  # poll socket for lines. luckily, listen is sleepy
-      sockets = select([@socket], nil, nil, 1)
-      if sockets == nil
-        return nil
-      else
-        begin
-          s = sockets[0][0] # read from socket 1
-          
-          if s.eof?
-            @disconnected = true
-            return nil
-          end
-          
-          msg = s.gets
-          
-        rescue Errno::ECONNRESET
-          @disconnected = true
-          return nil
-        end
-      end
     end
   end
 end
