@@ -129,10 +129,10 @@ module DiceBot
         reply(msg, command(msg)) unless msg.mode == "353"
       elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.                  
         return unless @rollPrefaces.include?($1)
-        respond_roll(rollString, msg)
+        respond_roll(msg.text, msg)
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
         return if @dicesuke[msg.origin.upcase]       
-        respond_roll(rollString, msg)
+        respond_roll(msg.text, msg)
       end
     end   
     
