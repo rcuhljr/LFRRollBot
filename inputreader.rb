@@ -1,22 +1,23 @@
 class InputReader
-  def initialize(canSend, outputBuffer, running)
-    @canSend = canSend
+  def initialize(outputBuffer, running, sema)    
     @outputBuffer = outputBuffer
     @running = running
+    @sema = sema    
     run()
   end    
 
-  def run
+  def run  
     while(@running[:state])
-      sleep(0.1)
-      next if @canSend[:state]
-      @outputBuffer[0] = gets.chomp      
-      if(@outputBuffer[0] =~ /^quit/i)
-        @canSend[:state] = false
+      sleep(0.1)            
+      newLine = gets.chomp 
+      return if newLine.nil?        
+      if(newLine =~ /^quit/i)
         @running[:state] = false
-      elsif @outputBuffer[0].size > 0               
-        @canSend[:state] = true      
-      end
+        return
+      end        
+      @sema.synchronize{          
+        @outputBuffer[0] = String.new(newLine)
+      }            
     end
   end  
 end

@@ -31,4 +31,7 @@ Roll Bot Grammar (Case Insensitive, broken down to regexes) -
 Notes. ke = keep emphasis, ku keep unskilled (no explosions) km = explode on 9's no emphasis. "" is only valid as a trigger if Dicesuke isn't in the same channel to prevent spam/confusion.
 Slight grammar mistake in the fact that you can attach a roll options to a number, but I don't feel bad about that.
 
-#Todo, fudge dice.
+Operator notes
+You can speak through the bot, in the shell running the bot just type your target, message, then hit enter. "#test hello all" will send 'hello all' to channel #test. 
+typing "join #test" will have the bot join channel #test. typing ": hello all" will send 'hello all' to the first channel in the bots channel list.
+'toki hey there' will send 'hey there' to there user toki as a private message.

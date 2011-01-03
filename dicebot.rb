@@ -12,14 +12,15 @@
 require 'socket'
 require 'strscan'
 require 'FileUtils'
+require 'Thread'
 load 'GrammarEngine.rb'
 load 'InputReader.rb'
 
 module DiceBot
   class Client 
     def initialize(nick, server, port, channels)
-      @running = {:state => true}
-      @canSend = {:state => false}
+      @sema = Mutex.new
+      @running = {:state => true}      
       @outputBuffer = [""]
       @nick = nick
       @server = server # one only
@@ -30,7 +31,7 @@ module DiceBot
       @dicesuke = Hash.new
       @lastPong = Time.new
       connect()
-      Thread.new{InputReader.new(@canSend, @outputBuffer, @running)}
+      Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
       run()
     end
 
@@ -81,7 +82,8 @@ module DiceBot
           #puts "reconnecting: #{@lastPong}"
           #@lastPong == Time.new
         end
-        speak_input() if @canSend[:state]
+        sleep(0.1)
+        speak_input
         handle_msg (@connection.listen)
       end
     end
@@ -249,17 +251,20 @@ module DiceBot
     end
     
     def speak_input() 
-      target = @outputBuffer[0].slice(/^\S+/i)      
-      message = @outputBuffer[0].slice(/ .*/)
+      outLine = ""      
+      @sema.synchronize{outLine = String.new(@outputBuffer[0])}      
+      if(outLine.nil? or outLine.empty?)
+        return
+      end      
+      target = outLine.slice(/^\S+/i)      
+      message = outLine.slice(/ .*/)      
       if (target =~ /join/i)
         join message
-        @outputBuffer[0] = ""
-        @canSend[:state] = false  
+        @sema.synchronize{@outputBuffer[0] = ""}
         return
       end
       pm(target, message) 
-      @outputBuffer[0] = ""
-      @canSend[:state] = false        
+      @sema.synchronize{@outputBuffer[0] = ""}
     end
     
     def notice(person, message)
