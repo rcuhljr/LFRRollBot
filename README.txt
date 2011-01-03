@@ -34,4 +34,4 @@ Slight grammar mistake in the fact that you can attach a roll options to a numbe
 Operator notes
 You can speak through the bot, in the shell running the bot just type your target, message, then hit enter. "#test hello all" will send 'hello all' to channel #test. 
 typing "join #test" will have the bot join channel #test. typing ": hello all" will send 'hello all' to the first channel in the bots channel list.
-'toki hey there' will send 'hey there' to there user toki as a private message.
+'toki hey there' will send 'hey there' to there user toki as a private message. "quit" kills the bot.
