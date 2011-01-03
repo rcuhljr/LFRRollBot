@@ -1,12 +1,6 @@
 #!/usr/env ruby
-#
 # bones v0.03
-# by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot
-# 
-#
-# NB: As a security measure, some IRC networks prevent IRC bots from joining
-# channels too quickly after connecting. Solve with this:
-# /invite botname
+# by Jonathan Drain http://d20.jonnydigital.com/roleplaying-tools/dicebot #
 # adapted by rcuhljr for the purposes of an L5R specific dice roller.
 
 require 'socket'
@@ -15,6 +9,8 @@ require 'FileUtils'
 require 'Thread'
 load 'GrammarEngine.rb'
 load 'InputReader.rb'
+load 'RollAliasManager.rb'
+load 'Utilities.rb'
 
 module DiceBot
   class Client 
@@ -51,12 +47,12 @@ module DiceBot
             # join channel
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
-            Logger.new.log("Joining #{channel}")
+            Utilities::Logger.new.log("Joining #{channel}")
           end 
       else
         @connection.speak "JOIN #{channels}"
             puts "Joining #{channels}"
-            Logger.new.log("Joining #{channels}")
+            Utilities::Logger.new.log("Joining #{channels}")
       end
     end
     
@@ -99,11 +95,11 @@ module DiceBot
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
         when /^:/ # msg
-          Logger.new.log(msg)
+          Utilities::Logger.new.log(msg)
           message = Message.new(msg, @dicesuke)
           respond(message)
         else
-          Logger.new.log("RAW>>"+msg)
+          Utilities::Logger.new.log("RAW>>"+msg)
           puts "RAW>> #{msg}"
           #nothing
       end
@@ -115,7 +111,7 @@ module DiceBot
       elsif msg.text =~ /^@join (#.*)$/
         join $1.to_s
       elsif msg.text =~ /^\?(\S+)/
-        reply_array(msg, Helper.new.help($1))        
+        reply_array(msg, Utilities::Helper.new.help($1))        
       elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/
         rollString = @rollAliases.load(msg.name, $1)        
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
@@ -137,7 +133,7 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
-          Logger.new.log("ERROR: " + e.to_s)
+          Utilities::Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end
       elsif msg.text =~ /^@(\S+)/
@@ -150,7 +146,7 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
-          Logger.new.log("ERROR: " + e.to_s)
+          Utilities::Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end      
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i          
@@ -161,7 +157,7 @@ module DiceBot
           putRoll(msg, result)
         rescue Exception => e
           puts "ERROR: " + e.to_s
-          Logger.new.log("ERROR: " + e.to_s)
+          Utilities::Logger.new.log("ERROR: " + e.to_s)
           reply(msg, "I had an unexpected error, sorry.")
         end
       end
@@ -403,76 +399,4 @@ module DiceBot
       end
     end
   end
-  
-  class Helper
-    def help(command)
-      case command.upcase
-        when "HELP", "ROLL", "DICE"
-          dataFile = File.new("help.txt","r")
-          val = dataFile.readlines
-          dataFile.close
-          return val          
-        else
-          return nil
-        end
-    end
-  end
-
-  class Logger
-    def log(text)   
-      stamp = Time.new
-      FileUtils.mkdir "logs" unless File.directory? "logs"
-      dataFile = File.new("logs\\#{stamp.strftime("%Y%m%d")}.log","a")
-      dataFile.write "#{stamp.strftime("%H:%M:%S")}-#{text}"
-      dataFile.close
-    end
-  end
-  
-  class DataManager
-    def load(name)
-      dataFile = File.new(name,"r")      
-      return Marshal.load(dataFile)
-    end
-
-    def store(name, data)
-      dataFile = File.new(name,"w")        
-      Marshal.dump(data,dataFile)
-      dataFile.close
-    end
-  end
-  
-  class RollAliasMananger    
-    def initialize    
-      @rollAliasFileName = "rollalias.dat"      
-      begin
-        @rollAliases = DataManager.new.load(@rollAliasFileName)
-      rescue
-        @rollAliases = Hash.new
-        @rollAliases["TOKI"] = Hash.new
-        @rollAliases["TOKI"]["TEST"] = "8k3{ExplodeOn:9} #sample"
-        DataManager.new.store(@rollAliasFileName, @rollAliases)
-      end    
-    end
-    
-    def save(name, aliasString, value)
-      @rollAliases[name.upcase] = Hash.new if @rollAliases[name.upcase].nil?
-      @rollAliases[name.upcase][aliasString.upcase] = value
-      DataManager.new.store(@rollAliasFileName, @rollAliases)
-    end
-    
-    def load(name, aliasString) 
-       puts name
-       puts aliasString
-      return String.new(@rollAliases[name.upcase][aliasString.upcase]) unless @rollAliases[name.upcase].nil? or @rollAliases[name.upcase][aliasString.upcase].nil?
-    end    
-    
-    
-    
-    def list(name)
-      return "No aliases found." if @rollAliases[name.upcase].nil?
-      resultString = ""
-      @rollAliases[name.upcase].keys.each { |x| resultString += "!" + x.downcase + ", " }
-      return resultString.slice(0,resultString.size-2)
-    end
-  end  
 end
