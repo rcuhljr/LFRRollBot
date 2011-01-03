@@ -1,5 +1,4 @@
-#require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-require 'Dicebox'
+load 'Dicebox.rb'
 
 class GrammarEngine
   def initialize(msg)

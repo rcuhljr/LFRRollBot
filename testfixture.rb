@@ -1,5 +1,5 @@
-require 'C:\Code\GitRepos\LFRRollBot\Dicebox'
-require 'C:\Code\GitRepos\LFRRollBot\GrammarEngine'
+load 'Dicebox.rb'
+load 'GrammarEngine.rb'
 require 'test/unit'
 #require 'Dicebox'
 #require 'GrammarEngine'
