@@ -18,7 +18,7 @@
       stamp = Time.new
       FileUtils.mkdir "logs" unless File.directory? "logs"
       dataFile = File.new("logs\\#{stamp.strftime("%Y%m%d")}.log","a")
-      dataFile.write "#{stamp.strftime("%H:%M:%S")}-#{text}"
+      dataFile.puts "#{stamp.strftime("%H:%M:%S")}-#{text}".chomp
       dataFile.close
     end
   end
