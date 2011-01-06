@@ -15,7 +15,7 @@ load 'Connection.rb'
 
 module DiceBot
   class Client 
-    def initialize(nick, server, port, channels)
+    def initialize(nick, server, port, channels, bots = [])
       @sema = Mutex.new
       @running = {:state => true}      
       @outputBuffer = [""]
@@ -25,7 +25,8 @@ module DiceBot
       @channels = channels
       @rollAliases = RollAliasMananger.new
       @rollPrefaces = ["roll", "r"]
-      @dicesuke = Hash.new
+      @botLocations = Hash.new
+      @bots = bots
       @lastPong = Time.new
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
@@ -46,12 +47,14 @@ module DiceBot
       if channels.kind_of?(Array) 
           channels.each do |channel|
             # join channel
+            @botLocations[channel.upcase] = 0
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
             Utilities::Logger.new.log("Joining #{channel}")
           end 
       else
         @connection.speak "JOIN #{channels}"
+            @botLocations[channels.upcase] = 0
             puts "Joining #{channels}"
             Utilities::Logger.new.log("Joining #{channels}")
       end
@@ -97,7 +100,7 @@ module DiceBot
           join_quietly(@channels)
         when /^:/ # msg
           Utilities::Logger.new.log(msg)
-          message = Message.new(msg, @dicesuke)
+          message = Message.new(msg, @botLocations, @bots)
           respond(message)
         else
           Utilities::Logger.new.log("RAW>>"+msg)
@@ -127,11 +130,11 @@ module DiceBot
         respond_roll(rollString, msg)        
       elsif msg.text =~ /^@(\S+)/ #commands from the users, also incidently operator users in the 353 channel user listing mode
         reply(msg, command(msg)) unless msg.mode == "353"
-      elsif msg.text =~ /^(\S+) .*[dkeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.                  
+      elsif msg.text =~ /^(\S+) [0-9]*[dkeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.                  
         return unless @rollPrefaces.include?($1)
         respond_roll(msg.text, msg)
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
-        return if @dicesuke[msg.origin.upcase]       
+        return if @botLocations[msg.origin.upcase] > 0       
         respond_roll(msg.text, msg)
       end
     end   
@@ -262,8 +265,9 @@ module DiceBot
   class Message
     attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text
     
-    def initialize(msg, dicesuke)
-      @dicesuke = dicesuke
+    def initialize(msg, botLocations, bots)
+      @botLocations = botLocations
+      @bots = bots
       parse(msg)      
     end
     
@@ -304,18 +308,18 @@ module DiceBot
           @mode = $3  
           @origin = $4
       end
-      
+      return if bots.empty?
       if(@mode == "353")        
-        @dicesuke[@origin.upcase] = true if @text =~ /dicesuke/i
+        @botLocations[@origin.upcase] = true  @text =~ /dicesuke/i
       end
       if(@mode == "PART")
-        @dicesuke[@origin] = false if @name =~ /dicesuke/i
+        @botLocations[@origin] = false if @name =~ /dicesuke/i
       end
       if(@mode == "QUIT")
-        @dicesuke = Hash.new if @name =~ /dicesuke/i
+        @botLocations = Hash.new if @name =~ /dicesuke/i
       end
       if(@mode == "JOIN")
-        @dicesuke[@origin] = true if @name =~ /dicesuke/i
+        @botLocations[@origin] = true if @name =~ /dicesuke/i
       end
     end
 
