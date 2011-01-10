@@ -17,7 +17,8 @@ bot_name = "Dice_Eta"
 server_to_join = "irc.sandwich.net"
 port = 6667
 list_of_channels = ["#Rokugan", "#Rokugan2", "#hor", "#hor1"]
+bots = ["Dicesuke"]
 
 begin
-  client = DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels)
+  client = DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels, bots)
 end
