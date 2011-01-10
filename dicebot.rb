@@ -312,7 +312,7 @@ module DiceBot
         foundBots.each {|x| @botLocations << (@origin.upcase+'.'+x)}
       end
       if(@mode == "PART")
-        @botLocations.delete_if {|x| x == (@origin.upcase +'.' + @name.upcase)} unless @bots.index{|x| @name.upcase == x }.nil?
+        @botLocations.delete_if {|x| x == (@origin.upcase+'.'+@name.upcase)} unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "QUIT")
         @botLocations.delete_if {|x| x.match('.'+@name.upcase) } unless @bots.index{|x| @name.upcase == x }.nil?
