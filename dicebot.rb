@@ -150,11 +150,11 @@ module DiceBot
     
     def command(msg)
       case msg.text
-        when /^@record !(\S+) (roll .*)/i #@record !stuff Roll ...
-          @rollAliases.save(msg.name, $1, $2)
+        when /^@record (!)?(\S+) (.*)/i #@record !stuff Roll ...
+          @rollAliases.save(msg.name, $2, $3)
           return "Saved."
-        when /^@remove !(\S+)/i #@remove !alias
-          @rollAliases.remove(msg.name, $1)
+        when /^@remove (!)?(\S+)/i #@remove !alias
+          @rollAliases.remove(msg.name, $2)
           return "Removed."
         when /^@List/i
           return @rollAliases.list(msg.name)
