@@ -25,8 +25,8 @@ module DiceBot
       @channels = channels
       @rollAliases = RollAliasMananger.new
       @rollPrefaces = ["roll", "r"]
-      @botLocations = Hash.new
-      @bots = bots
+      @botLocations = []
+      @bots = bots.map{|x| x.upcase}
       @lastPong = Time.new
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
@@ -46,15 +46,13 @@ module DiceBot
     def join(channels)
       if channels.kind_of?(Array) 
           channels.each do |channel|
-            # join channel
-            @botLocations[channel.upcase] = 0
+            # join channel            
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
             Utilities::Logger.new.log("Joining #{channel}")
           end 
       else
-        @connection.speak "JOIN #{channels}"
-            @botLocations[channels.upcase] = 0
+        @connection.speak "JOIN #{channels}"            
             puts "Joining #{channels}"
             Utilities::Logger.new.log("Joining #{channels}")
       end
@@ -134,7 +132,7 @@ module DiceBot
         return unless @rollPrefaces.include?($1)
         respond_roll(msg.text, msg)
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
-        return if @botLocations[msg.origin.upcase] > 0       
+        return if @botLocations.count{|x| x.match(msg.origin.upcase+'.')} > 0 #index is faster, but have to deal with nils.
         respond_roll(msg.text, msg)
       end
     end   
@@ -308,19 +306,20 @@ module DiceBot
           @mode = $3  
           @origin = $4
       end
-      return if bots.empty?
+      return if @bots.empty?      
       if(@mode == "353")        
-        @botLocations[@origin.upcase] = true  @text =~ /dicesuke/i
+        foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
+        foundBots.each {|x| @botLocations << (@origin.upcase+'.'+x)}
       end
       if(@mode == "PART")
-        @botLocations[@origin] = false if @name =~ /dicesuke/i
+        @botLocations.delete_if {|x| x == (@origin.upcase +'.' + @name.upcase)} unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "QUIT")
-        @botLocations = Hash.new if @name =~ /dicesuke/i
+        @botLocations.delete_if {|x| x.match('.'+@name.upcase) } unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "JOIN")
-        @botLocations[@origin] = true if @name =~ /dicesuke/i
-      end
+        @botLocations  << (@origin.upcase+'.'+@name.upcase) unless @bots.index{|x| @name.upcase == x }.nil?
+      end      
     end
 
     def print
