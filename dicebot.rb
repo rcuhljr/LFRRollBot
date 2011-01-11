@@ -309,16 +309,16 @@ module DiceBot
       return if @bots.empty?      
       if(@mode == "353")        
         foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
-        foundBots.each {|x| @botLocations << (@origin.upcase+'.'+x)}
+        foundBots.each {|x| @botLocations << "#{@origin.upcase}.#{x}"}
       end
       if(@mode == "PART")
-        @botLocations.delete_if {|x| x == (@origin.upcase+'.'+@name.upcase)} unless @bots.index{|x| @name.upcase == x }.nil?
+        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@name.upcase}"} unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "QUIT")
-        @botLocations.delete_if {|x| x.match('.'+@name.upcase) } unless @bots.index{|x| @name.upcase == x }.nil?
+        @botLocations.delete_if {|x| x.match ".#{@name.upcase}" } unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "JOIN")
-        @botLocations  << (@origin.upcase+'.'+@name.upcase) unless @bots.index{|x| @name.upcase == x }.nil?
+        @botLocations  << "#{@origin.upcase}.#{@name.upcase}" unless @bots.index{|x| @name.upcase == x }.nil?
       end      
     end
 
