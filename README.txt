@@ -35,3 +35,7 @@ Operator notes
 You can speak through the bot, in the shell running the bot just type your target, message, then hit enter. "#test hello all" will send 'hello all' to channel #test. 
 typing "join #test" will have the bot join channel #test. typing ": hello all" will send 'hello all' to the first channel in the bots channel list.
 'toki hey there' will send 'hey there' to there user toki as a private message. "quit" kills the bot.
+
+You can supply the bot with a series of names, these function as a list of other rollbots that you expect to be sharing the server with. 
+If one of the mentioned bots is in a channel with this dicebot it will refrain from rolling unless the more specific 'r xky' or 'roll xky' 
+formats are used.

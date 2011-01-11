@@ -1,8 +1,6 @@
 #!/usr/env ruby
-#
-# bones
 # by Jonathan Drain
-# Adopted as a framework for a new roller by rcuhljr
+# Adopted as a framework for a new roller by Robert Uhl
 
 load 'DiceBot.rb'
 
