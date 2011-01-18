@@ -29,6 +29,10 @@ class Connection # a connection to an IRC server; only one so far
   end
 
   def speak(msg,quietly = nil)
+    if @disconnected
+      puts "tried to send '#{msg}' while disconnected."
+      return
+    end
     begin
       if quietly != true
         puts("spoke>> " + msg)
