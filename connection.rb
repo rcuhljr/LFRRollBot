@@ -10,9 +10,14 @@ class Connection # a connection to an IRC server; only one so far
   
   def connect
     # do some weird stuff with ports
-    @socket = TCPSocket.open(@server, @port)
-    puts "hammer connected!"
-    @disconnected = false
+    begin
+      @socket = TCPSocket.open(@server, @port)
+      puts "hammer connected!"
+      @disconnected = false
+    rescue
+      puts "failed to connect at #{Time.now}"
+      @disconnected = true
+    end
   end
 
   def disconnected? # inadvertently disconnected
