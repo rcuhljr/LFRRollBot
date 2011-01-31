@@ -205,14 +205,17 @@ module DiceBot
       end
     end
     
-    def putRoll(msg, result)        
+    def putRoll(msg, result)  
+      answer = "Errored Message?"
       if msg.privmsg
-        @connection.speak "#{msg.mode} #{msg.name} :#{result[:message]}" if result[:error]
-        @connection.speak "#{msg.mode} #{msg.name} :\x01ACTION rolls the dice for you. #{result[:message]}\x01" unless result[:error]
+        answer = "#{msg.mode} #{msg.name} :#{result[:message]}" if result[:error]
+        answer = "#{msg.mode} #{msg.name} :\x01ACTION rolls the dice for you. #{result[:message]}\x01" unless result[:error]
       else
-        @connection.speak "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01" unless result[:error]
-        @connection.speak "#{msg.mode} #{msg.origin} :#{msg.name}, #{result[:message]}" if result[:error]
+        answer = "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01" unless result[:error]
+        answer = "#{msg.mode} #{msg.origin} :#{msg.name}, #{result[:message]}" if result[:error]
       end
+      Utilities::Logger.new.log(answer)
+      @connection.speak answer
     end
     
     def pm(person, message)
