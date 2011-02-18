@@ -192,6 +192,7 @@ module DiceBot
     end
     
     def reply_array(msg, message) # reply to a pm or channel message
+      return if message.nil?
       if msg.privmsg
         message.each { |x|
         @connection.speak "#{msg.mode} #{msg.name} :#{x.chomp}"
