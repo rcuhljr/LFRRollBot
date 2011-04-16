@@ -284,7 +284,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN|KICK) ((#?)\S+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -320,6 +320,10 @@ module DiceBot
       end
       if(@mode == "PART")
         @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@name.upcase}"} unless @bots.index{|x| @name.upcase == x }.nil?
+      end
+      if(@mode == "KICK")
+        kicked = @text.split[0]
+        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{kicked.upcase}"} unless @bots.index{|x| kicked.upcase == x }.nil?
       end
       if(@mode == "QUIT")
         @botLocations.delete_if {|x| x.match ".#{@name.upcase}" } unless @bots.index{|x| @name.upcase == x }.nil?
