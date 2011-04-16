@@ -311,8 +311,11 @@ module DiceBot
           @origin = $4
       end
       return if @bots.empty?      
-      if(@mode == "353")        
+      if(@mode == "353")
+        puts msg
+        puts @text
         foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
+        foundBots.each {|x| puts x}
         foundBots.each {|x| @botLocations << "#{@origin.upcase}.#{x}"}
       end
       if(@mode == "PART")

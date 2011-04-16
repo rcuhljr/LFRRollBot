@@ -19,6 +19,12 @@
       Utilities::DataManager.new.store(@rollAliasFileName, @rollAliases)
     end
     
+    def remove(name, aliasString)
+      return if @rollAliases[name.upcase].nil?      
+      @rollAliases[name.upcase].delete aliasString.upcase
+      Utilities::DataManager.new.store(@rollAliasFileName, @rollAliases)
+    end
+    
     def load(name, aliasString) 
        puts name
        puts aliasString
