@@ -37,7 +37,7 @@ module DiceBot
       @connection = Connection.new(@server, @port)
       
       @connection.speak "NICK #{@nick}"
-      @connection.speak "USER #{@nick} dice_eta * :Dice_Eta: ?help for more information"
+      @connection.speak "USER #{@nick} #{@nick} * :#{@nick}: ?help for more information"
       # TODO: fix join bug
       # TODO: what is the join bug?
       join(@channels)
