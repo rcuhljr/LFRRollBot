@@ -90,7 +90,9 @@ module DiceBot
 
       while @running[:state]
         while @connection.disconnected? 
+          puts "disconnected, sleeping for 30 then trying to connect."
           sleep 30
+          puts "connecting..."
           connect()             
         end
         sleep(0.1)
