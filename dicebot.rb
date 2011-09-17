@@ -85,7 +85,7 @@ module DiceBot
 
       while @running[:state]
         while @connection.disconnected? #|| (Time.new-@lastPong) > 600 # never give up reconnect          
-          sleep 10
+          sleep 30
           connect()   
           #puts "reconnecting: #{@lastPong}"
           #@lastPong == Time.new

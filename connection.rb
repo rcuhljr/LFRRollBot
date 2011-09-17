@@ -38,7 +38,7 @@ class Connection # a connection to an IRC server; only one so far
         puts("spoke>> " + msg)
       end
       @socket.write(msg + "\n")
-    rescue Errno::ECONNRESET
+    rescue 
       @disconnected = true;
     end 
   end
