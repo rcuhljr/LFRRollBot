@@ -7,6 +7,7 @@ require 'socket'
 require 'strscan'
 require 'FileUtils'
 require 'Thread'
+require 'pp'
 load 'GrammarEngine.rb'
 load 'InputReader.rb'
 load 'RollAliasManager.rb'
@@ -15,7 +16,7 @@ load 'Connection.rb'
 
 module DiceBot
   class Client 
-    def initialize(nick, server, port, channels, bots = [])
+    def initialize(nick, server, port, channels, bots = [], debug = false)
       @sema = Mutex.new
       @running = {:state => true}      
       @outputBuffer = [""]
@@ -28,9 +29,18 @@ module DiceBot
       @botLocations = []
       @bots = bots.map{|x| x.upcase}
       @lastPong = Time.new
+      @debug = debug
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
       run()
+    end
+    
+    def debug(msg)
+      puts msg
+      puts "running:"
+      pp @running
+      puts "channels:" + @channels.inspect
+      puts "bot locations:" + @botLocations.inspect
     end
 
     def connect
@@ -86,7 +96,7 @@ module DiceBot
       end
     end
     
-    def handle_msg(msg)	   
+    def handle_msg(msg)	         
       case msg
         when nil
           #nothing
@@ -104,6 +114,9 @@ module DiceBot
           Utilities::Logger.new.log("RAW>>"+msg)
           puts "RAW>> #{msg}"
           #nothing
+      end
+      if(@debug && !msg.nil?) then
+        debug(msg);
       end
     end
     
@@ -284,7 +297,7 @@ module DiceBot
       case msg
         when nil
           puts "heard nil? wtf"
-        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN|KICK) ((#?)\S+) :(.+)/
+        when /^:(\S+)!(\S+) (PRIVMSG|NOTICE|INVITE|PART|JOIN|KICK) ((#?).+) :(.+)/
           @name = $1
           @hostname = $2
           @mode = $3
@@ -310,7 +323,9 @@ module DiceBot
           @mode = $3  
           @origin = $4
       end
-      return if @bots.empty?      
+      puts "message:"+msg
+      puts @mode
+      return if @bots.empty?   
       if(@mode == "353")
         puts msg
         puts @text
@@ -322,14 +337,17 @@ module DiceBot
         @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@name.upcase}"} unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "KICK")
-        kicked = @text.split[0]
-        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{kicked.upcase}"} unless @bots.index{|x| kicked.upcase == x }.nil?
+        puts "kick detected"
+        kicked = @origin.split[1].chomp
+        @origin = @origin.split[0].chomp
+        puts "kicked:#{kicked}"
+        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{kicked.upcase}"}
       end
       if(@mode == "QUIT")
         @botLocations.delete_if {|x| x.match ".#{@name.upcase}" } unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "JOIN")
-        @botLocations  << "#{@origin.upcase}.#{@name.upcase}" unless @bots.index{|x| @name.upcase == x }.nil?
+        @botLocations  << "#{@origin.chomp.upcase}.#{@name.chomp.upcase}" unless @bots.index{|x| @name.chomp.upcase == x }.nil?
       end      
     end
 
