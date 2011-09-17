@@ -340,8 +340,8 @@ module DiceBot
         puts "kick detected"
         @kicked = @origin.split[1].chomp
         @origin = @origin.split[0].chomp
-        puts "kicked:#{kicked}"
-        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{kicked.upcase}"}
+        puts "kicked:#{@kicked}"
+        @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@kicked.upcase}"}
       end
       if(@mode == "QUIT")
         @botLocations.delete_if {|x| x.match ".#{@name.upcase}" } unless @bots.index{|x| @name.upcase == x }.nil?
