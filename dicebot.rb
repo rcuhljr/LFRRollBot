@@ -28,7 +28,10 @@ module DiceBot
       @rollPrefaces = ["roll", "r"]
       @botLocations = []
       @bots = bots.map{|x| x.upcase}
-      @lastPong = Time.new
+      @lastPing = Time.new
+      @pingFrequency = 60
+      @pingTimeout = 15
+      @pingOut = false
       @debug = debug
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
@@ -84,11 +87,9 @@ module DiceBot
       # handle replies
 
       while @running[:state]
-        while @connection.disconnected? #|| (Time.new-@lastPong) > 600 # never give up reconnect          
+        while @connection.disconnected? 
           sleep 30
-          connect()   
-          #puts "reconnecting: #{@lastPong}"
-          #@lastPong == Time.new
+          connect()             
         end
         sleep(0.1)
         speak_input
@@ -99,10 +100,19 @@ module DiceBot
     def handle_msg(msg)	         
       case msg
         when nil
-          #nothing
+          if(!pingOut && @lastPing-Time.new > @pingFrequency)
+            @connection.speak "PING #{@server}", true)
+            @lastPing = Time.new
+            @pingOut = true
+          end
+          if(pingOut && @lastPing-Time.new > @pingTimeout)
+            @connection.disconnect
+            @pingOut = false
+            @lastPing = Time.new
+          end
         when /^PING (.+)$/
-          @lastPong = Time.new
-          puts "PONGED #{@lastPong}"
+          lastPong = Time.new
+          puts "PONGED #{lastPong}"
           @connection.speak("PONG #{$1}", true) # PING? PONG!
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
@@ -255,6 +265,11 @@ module DiceBot
       if(outLine.nil? or outLine.empty?)
         return
       end      
+      if(outLine =~/^!/)
+        @connection.speak outLine.slice(1..outLine.size)
+        @sema.synchronize{@outputBuffer[0] = ""}
+        return
+      end        
       target = outLine.slice(/^\S+/i)      
       message = outLine.slice(/ .*/)      
       if (target =~ /join/i)
@@ -322,8 +337,9 @@ module DiceBot
           @name = $1
           @mode = $3  
           @origin = $4
-      end
-      puts "message:"+msg
+        when /^:(\S+) (PONG) (.*)/                    
+          @mode = $2                              
+      end      
       puts @mode
       return if @bots.empty?   
       if(@mode == "353")
@@ -348,6 +364,9 @@ module DiceBot
       end
       if(@mode == "JOIN")
         @botLocations  << "#{@origin.chomp.upcase}.#{@name.chomp.upcase}" unless @bots.index{|x| @name.chomp.upcase == x }.nil?
+      end      
+      if(@mode == "PONG")
+        @pingOut = false
       end      
     end
 
