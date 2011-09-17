@@ -145,7 +145,7 @@ module DiceBot
         return unless @rollPrefaces.include?($1)
         respond_roll(msg.text, msg)
       elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
-        return if @botLocations.count{|x| x.match(msg.origin.upcase+'.')} > 0 #index is faster, but have to deal with nils.
+        return if @botLocations.count{|x| x.slice(0,msg.origin.size+1) == "#{msg.origin.upcase}." } > 0 #index is faster, but have to deal with nils.
         respond_roll(msg.text, msg)
       end
     end   
@@ -278,7 +278,7 @@ module DiceBot
   end
 
   class Message
-    attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text
+    attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text, :kicked
     
     def initialize(msg, botLocations, bots)
       @botLocations = botLocations
@@ -338,7 +338,7 @@ module DiceBot
       end
       if(@mode == "KICK")
         puts "kick detected"
-        kicked = @origin.split[1].chomp
+        @kicked = @origin.split[1].chomp
         @origin = @origin.split[0].chomp
         puts "kicked:#{kicked}"
         @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{kicked.upcase}"}
