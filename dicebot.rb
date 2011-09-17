@@ -340,6 +340,7 @@ module DiceBot
         when /^:(\S+) (PONG) (.*)/                    
           @mode = $2                              
       end      
+      puts msg
       puts @mode
       return if @bots.empty?   
       if(@mode == "353")
