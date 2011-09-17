@@ -102,13 +102,13 @@ module DiceBot
     def handle_msg(msg)	       
       case msg
         when nil
-          if(!@pingOut && @Time.new-lastPing > @pingFrequency)
+          if(!@pingOut && Time.new-@lastPing > @pingFrequency)
             puts "pingOut"
             @connection.speak("PING #{@server}", true)
             @lastPing = Time.new
             @pingOut = true
           end
-          if(@pingOut && @Time.new-lastPing > @pingTimeout)
+          if(@pingOut && Time.new-@lastPing > @pingTimeout)
             puts "ping timeout"
             @connection.disconnect
             @pingOut = false
