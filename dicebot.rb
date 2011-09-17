@@ -102,18 +102,22 @@ module DiceBot
     def handle_msg(msg)	       
       case msg
         when nil
+          changed = false
           if(!@pingOut && Time.new-@lastPing > @pingFrequency)
             puts "pingOut"
             @connection.speak("PING #{@server}", true)
             @lastPing = Time.new
             @pingOut = true
+            changed = true
           end
           if(@pingOut && Time.new-@lastPing > @pingTimeout)
             puts "ping timeout"
             @connection.disconnect
             @pingOut = false
             @lastPing = Time.new
+            changed = true
           end
+          debug("Null Message") if changed          
         when /^PING (.+)$/
           lastPong = Time.new
           puts "PONGED #{lastPong}"
@@ -128,7 +132,7 @@ module DiceBot
           Utilities::Logger.new.log("RAW>>"+msg)
           puts "RAW>> #{msg}"
           #nothing
-      end
+      end      
       if(@debug && !msg.nil?) then
         debug(msg);
       end
@@ -137,6 +141,9 @@ module DiceBot
     def respond(msg)
       if msg.mode == "INVITE"
         join msg.text
+      elsif msg.mode == "PONG"
+        @pingOut = false
+        @lastPing = Time.new
       elsif msg.text =~ /^@join (#.*)$/  #someone messaged him with @join #channel
         join $1.to_s
       elsif msg.text =~ /^\?(\S+)/ #help command
@@ -297,11 +304,12 @@ module DiceBot
   end
 
   class Message
-    attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text, :kicked
+    attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text, :kicked, :pinged
     
     def initialize(msg, botLocations, bots)
       @botLocations = botLocations
-      @bots = bots
+      @bots = bots    
+      @pinged = false
       parse(msg)      
     end
     
@@ -344,7 +352,11 @@ module DiceBot
         when /^:(\S+) (PONG) (.*)/                    
           @mode = $2                              
       end      
-      puts "mode:"+ @mode unless @mode.nil?
+      puts "mode:"+ @mode unless @mode.nil?            
+      if(@mode == "PONG")
+        puts "ponged by server"
+        @pinged = true
+      end     
       return if @bots.empty?   
       if(@mode == "353")
         foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
@@ -364,10 +376,7 @@ module DiceBot
       end
       if(@mode == "JOIN")
         @botLocations  << "#{@origin.chomp.upcase}.#{@name.chomp.upcase}" unless @bots.index{|x| @name.chomp.upcase == x }.nil?
-      end      
-      if(@mode == "PONG")
-        @pingOut = false
-      end      
+      end 
     end
 
     def print
