@@ -101,7 +101,7 @@ module DiceBot
       case msg
         when nil
           if(!pingOut && @lastPing-Time.new > @pingFrequency)
-            @connection.speak "PING #{@server}", true)
+            @connection.speak("PING #{@server}", true)
             @lastPing = Time.new
             @pingOut = true
           end
