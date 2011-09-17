@@ -44,6 +44,8 @@ module DiceBot
       pp @running
       puts "channels:" + @channels.inspect
       puts "bot locations:" + @botLocations.inspect
+      puts "last Ping:" +@lastPing.to_s
+      puts "pingOut:"+@pingOut.to_s
     end
 
     def connect
@@ -97,15 +99,17 @@ module DiceBot
       end
     end
     
-    def handle_msg(msg)	         
+    def handle_msg(msg)	       
       case msg
         when nil
           if(!@pingOut && @lastPing-Time.new > @pingFrequency)
+            puts "pingOut"
             @connection.speak("PING #{@server}", true)
             @lastPing = Time.new
             @pingOut = true
           end
           if(@pingOut && @lastPing-Time.new > @pingTimeout)
+            puts "ping timeout"
             @connection.disconnect
             @pingOut = false
             @lastPing = Time.new
@@ -340,12 +344,9 @@ module DiceBot
         when /^:(\S+) (PONG) (.*)/                    
           @mode = $2                              
       end      
-      puts msg
-      puts @mode
+      puts "mode:"+ @mode unless @mode.nil?
       return if @bots.empty?   
       if(@mode == "353")
-        puts msg
-        puts @text
         foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
         foundBots.each {|x| puts x}
         foundBots.each {|x| @botLocations << "#{@origin.upcase}.#{x}"}
@@ -354,10 +355,8 @@ module DiceBot
         @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@name.upcase}"} unless @bots.index{|x| @name.upcase == x }.nil?
       end
       if(@mode == "KICK")
-        puts "kick detected"
         @kicked = @origin.split[1].chomp
         @origin = @origin.split[0].chomp
-        puts "kicked:#{@kicked}"
         @botLocations.delete_if {|x| x == "#{@origin.upcase}.#{@kicked.upcase}"}
       end
       if(@mode == "QUIT")
