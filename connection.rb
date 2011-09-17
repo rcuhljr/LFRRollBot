@@ -21,10 +21,11 @@ class Connection # a connection to an IRC server; only one so far
   end
 
   def disconnected? # inadvertently disconnected
-    return @socket.closed? || @disconnected
+    return @disconnected || @socket.closed?
   end
 
   def disconnect
+    @disconnected = true
     @socket.close
   end
 
@@ -59,6 +60,9 @@ class Connection # a connection to an IRC server; only one so far
         msg = s.gets
         
       rescue Errno::ECONNRESET
+        @disconnected = true
+        return nil
+      rescue 
         @disconnected = true
         return nil
       end
