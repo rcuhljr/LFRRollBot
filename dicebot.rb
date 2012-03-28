@@ -73,6 +73,12 @@ module DiceBot
       end
     end
     
+    def part(channel)
+      puts "Leaving #{channel}"
+      Utilities::Logger.new.log("Leaving #{channel}")
+      @connection.speak "PART #{channel} :Heads to the teahouse"
+    end
+    
     def join_quietly(channels)
       if channels.kind_of?(Array) 
         channels.each do |channel|
@@ -148,6 +154,8 @@ module DiceBot
         @lastPing = Time.new
       elsif msg.text =~ /^@join (#.*)$/  #someone messaged him with @join #channel
         join $1.to_s
+        elsif msg.text =~ /^@leave (#.*)$/  #someone messaged him with @leave #channel
+        part $1.to_s
       elsif msg.text =~ /^\?(\S+)/ #help command
         reply_array(msg, Utilities::Helper.new.help($1))        
       elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/ #a roll alias name, possibly followed by additional dice and or a label
