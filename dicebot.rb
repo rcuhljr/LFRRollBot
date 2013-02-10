@@ -68,9 +68,15 @@ module DiceBot
           end 
       else
         @connection.speak "JOIN #{channels}"            
-            puts "Joining #{channels}"
-            Utilities::Logger.new.log("Joining #{channels}")
+		puts "Joining #{channels}"
+		Utilities::Logger.new.log("Joining #{channels}")
       end
+    end
+	
+    def operator(channel, name)
+      @connection.speak "MODE #{channel} +o #{name}"	
+      puts "Giving Op to #{name} on #{channel}"
+      Utilities::Logger.new.log("Giving Op to #{name} on #{channel}")
     end
     
     def part(channel)
@@ -194,6 +200,7 @@ module DiceBot
     end    
     
     def command(msg)
+	  puts
       case msg.text
         when /^@record (!)?(\S+) (.*)/i #@record !stuff Roll ...
           @rollAliases.save(msg.name, $2, $3)
@@ -209,6 +216,9 @@ module DiceBot
           end
           setMode msg.text
           return "Set."
+        when /^@op (.*)/i #@op identifier
+          operator(msg.origin, $1)
+          return "Operator mode given to #{$1}"
         else
           return "I don't recognize that command, sorry."
       end      
