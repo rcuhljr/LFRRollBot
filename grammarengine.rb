@@ -131,7 +131,7 @@ class GrammarEngine
     return {:error => true, :message => @failText} if @failed
     @label += ":" unless (@label.nil? || @label.size == 0)
     aMessage = "(#{@label}#{@orig}) #{@resultString.delete(' ')}:#{@result}"
-    aMessage = "(#{@label}#{@orig}) for a total of #{@result}" if (aMessage.size > 400) #not the best fix, since we don't know how long someones name is, thus we don't know the beginning length of the string. seems to catch the worst cases.
-    return {:error => false, :message => aMessage}    
+    shortMessage = "(#{@label}#{@orig}) for a total of #{@result}"
+    return {:error => false, :message => aMessage, :shortmessage => shortMessage}    
   end    
 end

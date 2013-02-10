@@ -261,16 +261,22 @@ module DiceBot
     end
     
     def putRoll(msg, result)  
-      answer = "Errored Message?"
+      postfix = ""
+      prefix = ""
       if msg.privmsg
-        answer = "#{msg.mode} #{msg.name} :#{result[:message]}" if result[:error]
-        answer = "#{msg.mode} #{msg.name} :\x01ACTION rolls the dice for you. #{result[:message]}\x01" unless result[:error]
+        prefix = "#{msg.mode} #{msg.name} "
       else
-        answer = "#{msg.mode} #{msg.origin} :\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01" unless result[:error]
-        answer = "#{msg.mode} #{msg.origin} :#{msg.name}, #{result[:message]}" if result[:error]
+        prefix = "#{msg.mode} #{msg.origin} "        
       end
-      Utilities::Logger.new.log(answer)
-      @connection.speak answer
+      if result[:error]            
+        postfix = ":#{result[:message]}"
+      else
+        postfix = ":\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01"
+        #Spec for IRC claims 510 character messages are allowed, however this doesn't appear to be the case for IRC networks I'm testing on.
+        postfix = ":\x01ACTION rolls the dice for #{msg.name} #{result[:shortmessage]}\x01" if (prefix+postfix).size > 450
+      end
+      Utilities::Logger.new.log(prefix+postfix)
+      @connection.speak (prefix+postfix)
     end
     
     def pm(person, message)
