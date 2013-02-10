@@ -54,9 +54,9 @@ class GrammarEngine
     else
       @opCount -= 1
       if(inStr =~ /([0-9]+)([dkeum]+)([0-9]+)(\{.*\}|$)/i) #<num><type><num>[<options>]
-        rollResult = Roll($1,$2,$3,$4);
-      elsif(inStr =~ /d([0-9]+)(\{.*\}|$)/i)#<type><num>[<options>]
-        rollResult = Roll("1",$1,$2,$3);
+        rollResult = Roll($1,$2,$3,$4)
+      elsif(inStr =~ /(d)([0-9]+)(\{.*\}|$)/i)#<type><num>[<options>]
+        rollResult = Roll("1",$1,$2,$3)
       elsif(inStr =~ /[0-9]+/)
         rollResult = {:total => inStr.to_i, :values => ""}
       end
@@ -79,7 +79,7 @@ class GrammarEngine
   
 	def Roll(num1, type, num2, options)
     #puts "num1:" + num1
-    #puts "num2:" + num2
+    #puts "num2:" + num2	
     num1 = num1.to_i
     num2 = num2.to_i
     roll = 0
