@@ -14,11 +14,11 @@ load 'DiceBot.rb'
 bot_name = "Dice_Eta"
 server_to_join = "irc.sandwich.net"
 port = 6667
-list_of_channels = ["#DiceTest"]
-bots = ["FakeBot", "@FakeBot"]  #fix hack later
-debug = true
+list_of_channels = ["#Hor3", "#Hor"]
+bots = []  #fix hack later
+debug = false
 
-#If you don't want any bot detection features just don't send in a bots paramater. E.g. DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels)
+#If you don't want any bot detection features just don't send in a bots parameter. E.g. DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels)
 begin
   client = DiceBot::Client.new(bot_name, server_to_join, port, list_of_channels, bots, debug)
 end

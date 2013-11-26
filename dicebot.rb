@@ -39,6 +39,7 @@ module DiceBot
     end
     
     def debug(msg)
+      return unless @debug
       puts msg
       puts "running:"
       pp @running
@@ -118,14 +119,14 @@ module DiceBot
         when nil
           changed = false
           if(!@pingOut && Time.new-@lastPing > @pingFrequency)
-            puts "pingOut"
+            puts "pingOut" if @debug
             @connection.speak("PING #{@server}", true)
             @lastPing = Time.new
             @pingOut = true
             changed = true
           end
           if(@pingOut && Time.new-@lastPing > @pingTimeout)
-            puts "ping timeout"
+            puts "ping timeout" 
             @connection.disconnect
             @pingOut = false
             @lastPing = Time.new
@@ -134,7 +135,7 @@ module DiceBot
           debug("Null Message") if changed          
         when /^PING (.+)$/
           lastPong = Time.new
-          puts "PONGED #{lastPong}"
+          puts "PONGED #{lastPong}" if @debug
           @connection.speak("PONG #{$1}", true) # PING? PONG!
           # TODO: Check if channels are joined before attempting redundant joins
           join_quietly(@channels)
@@ -378,9 +379,9 @@ module DiceBot
         when /^:(\S+) (PONG) (.*)/                    
           @mode = $2                              
       end      
-      puts "mode:"+ @mode unless @mode.nil?            
+      puts "mode:#{@mode}" if @debug
       if(@mode == "PONG")
-        puts "ponged by server"
+        puts "ponged by server" if @debug
         @pinged = true
       end     
       return if @bots.empty?   
