@@ -1,17 +1,27 @@
+require 'openssl'
+
 class Connection # a connection to an IRC server; only one so far
   attr_reader :disconnected
 
-  def initialize(server, port)
+  def initialize(server, port, ssl)
     @server = server
     @port = port
     @disconnected = false
+	@ssl = ssl
     connect()
   end
   
   def connect
     # do some weird stuff with ports
     begin
-      @socket = TCPSocket.open(@server, @port)
+      @socket = TCPSocket.open(@server, @port)	  
+	  if @ssl
+		  ssl = OpenSSL::SSL::SSLContext.new
+		  ssl.verify_mode = OpenSSL::SSL::VERIFY_NONE
+		  @socket = OpenSSL::SSL::SSLSocket.new(@socket, ssl)
+		  @socket.sync = true
+		  @socket.connect
+	   end
       puts "hammer connected!"
       @disconnected = false
     rescue

@@ -16,7 +16,7 @@ load 'Connection.rb'
 
 module DiceBot
   class Client 
-    def initialize(nick, server, port, channels, bots = [], debug = false)
+    def initialize(nick, server, port, ssl, channels, bots = [], debug = false)
       @sema = Mutex.new
       @running = {:state => true}      
       @outputBuffer = [""]
@@ -33,6 +33,8 @@ module DiceBot
       @pingTimeout = 15
       @pingOut = false
       @debug = debug
+	  @ssl = ssl
+	  @first_live = false
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
       run()
@@ -50,14 +52,17 @@ module DiceBot
     end
 
     def connect
-      @connection = Connection.new(@server, @port)
+      @connection = Connection.new(@server, @port, @ssl)
       
       @connection.speak "NICK #{@nick}"
       @connection.speak "USER #{@nick} #{@nick} * :#{@nick}: ?help for more information"
       # TODO: fix join bug
-      # TODO: what is the join bug?
-      join(@channels)
+      # TODO: what is the join bug?      
     end
+	
+	def join_initial
+		join(@channels)		
+	end
 
     def join(channels)
       if channels.kind_of?(Array) 
@@ -101,7 +106,7 @@ module DiceBot
       # stay connected
       # handle replies
 
-      while @running[:state]
+      while @running[:state]		
         while @connection.disconnected? 
           puts "disconnected, sleeping for 30 then trying to connect."
           sleep 30
@@ -114,7 +119,11 @@ module DiceBot
       end
     end
     
-    def handle_msg(msg)	       
+    def handle_msg(msg)	
+	  if !msg.nil? && !@first_live				
+		@first_live = true		
+		join_initial	  
+	  end
       case msg
         when nil
           changed = false
