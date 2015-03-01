@@ -11,8 +11,7 @@ class Connection # a connection to an IRC server; only one so far
     connect()
   end
   
-  def connect
-    # do some weird stuff with ports
+  def connect    
     begin
       @socket = TCPSocket.open(@server, @port)	  
 	  if @ssl

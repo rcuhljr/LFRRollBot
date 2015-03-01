@@ -5,14 +5,14 @@
 
 require 'socket'
 require 'strscan'
-require 'FileUtils'
-require 'Thread'
+require 'fileutils'
+require 'thread'
 require 'pp'
-load 'GrammarEngine.rb'
-load 'InputReader.rb'
-load 'RollAliasManager.rb'
-load 'Utilities.rb'
-load 'Connection.rb'
+require './grammarengine.rb'
+require './inputreader.rb'
+require './rollaliasmanager.rb'
+require './utilities.rb'
+require './connection.rb'
 
 module DiceBot
   class Client 
@@ -29,12 +29,13 @@ module DiceBot
       @botLocations = []
       @bots = bots.map{|x| x.upcase}
       @lastPing = Time.new
+      @initialJoinTimer
       @pingFrequency = 60
       @pingTimeout = 15
       @pingOut = false
       @debug = debug
-	  @ssl = ssl
-	  @first_live = false
+      @ssl = ssl
+      @first_live = false
       connect()
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
       run()
@@ -61,7 +62,12 @@ module DiceBot
     end
 	
 	def join_initial
-		join(@channels)		
+    if !@first_live
+      join(@channels)		
+    elsif (@initialJoinTimer - Time.now) > 15
+      @initialJoinTimer = Time.now
+      join_quietly(@channels)
+    end
 	end
 
     def join(channels)
@@ -74,8 +80,8 @@ module DiceBot
           end 
       else
         @connection.speak "JOIN #{channels}"            
-		puts "Joining #{channels}"
-		Utilities::Logger.new.log("Joining #{channels}")
+        puts "Joining #{channels}"
+        Utilities::Logger.new.log("Joining #{channels}")
       end
     end
 	
@@ -120,10 +126,11 @@ module DiceBot
     end
     
     def handle_msg(msg)	
+    join_initial
 	  if !msg.nil? && !@first_live				
-		@first_live = true		
-		join_initial	  
-	  end
+      @first_live = true		
+      @initialJoinTimer = Time.new      
+	  end      
       case msg
         when nil
           changed = false
