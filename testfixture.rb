@@ -8,36 +8,36 @@ class TestFixture < Test::Unit::TestCase
 
   def test_grammarbasic
     result = GrammarEngine.new("Roll 5k3 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
-  
+
   def test_grammarbasic2
     result = GrammarEngine.new("Roll 5k3+6k2+5 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
-  
+
   def test_grammarbasic3
     result = GrammarEngine.new("Roll 5k3 + 6k2 + 5 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
-  
+
   def test_grammarbasic4
     result = GrammarEngine.new("Roll 5k3+ 6k2+ 5 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
-  
+
   def test_grammarbasic5
     result = GrammarEngine.new("Roll 5k3 +6k2 +5 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
-  
+
   def test_grammarbasic6
     result = GrammarEngine.new("Roll 5k3 +6k2+ 5 #Katana").execute
-    assert(false, result)  
+    assert_false result[:error]
   end
 
   def test_roll1d20
-    100.times do     
+    100.times do
       testValue = Dicebox.new.RollKeep(1, 1, {:explodeOn => 21, :sidesPerDie => 20})
       assert((testValue[:total] > 0), "value of #{testValue[:total]}")
       assert((testValue[:total] < 21), "value of #{testValue[:total]}")
@@ -50,16 +50,31 @@ class TestFixture < Test::Unit::TestCase
       assert((testValue[:total] < 3), "value of #{testValue[:total]}")
     end
   end
-  
+
   def test_roll5k3
     1.times do
       testValue = Dicebox.new.RollKeep(5, 3, {:explodeOn => 10, :sidesPerDie => 10})
-      assert(false, "value of #{testValue[:total]}\nValues of:#{testValue[:values].to_s}")      
+      assert(testValue, "value of #{testValue[:total]}\nValues of:#{testValue[:values].to_s}")
     end
   end
-  
-  def test_grammarbasic6
+
+  def test_grammarbasic_bad
     result = GrammarEngine.new("Roll a die for me").execute
-    assert(false, result)  
+    assert_true result[:error]
+  end
+
+  def test_basic_roll
+    result = GrammarEngine.new("1d20").execute
+    assert_false result[:error]
+  end
+
+  def test_basic_dsix_roll
+    result = GrammarEngine.new("3d6").execute
+    assert_false result[:error]
+  end
+
+  def test_basic_damage_roll
+    result = GrammarEngine.new("5dk6 #feet1").execute
+    assert_false result
   end
 end

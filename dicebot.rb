@@ -15,10 +15,10 @@ require './utilities.rb'
 require './connection.rb'
 
 module DiceBot
-  class Client 
+  class Client
     def initialize(nick, server, port, ssl, channels, bots = [], debug = false)
       @sema = Mutex.new
-      @running = {:state => true}      
+      @running = {:state => true}
       @outputBuffer = [""]
       @nick = nick
       @server = server # one only
@@ -40,7 +40,7 @@ module DiceBot
       Thread.new{InputReader.new(@outputBuffer, @running, @sema)}
       run()
     end
-    
+
     def debug(msg)
       return unless @debug
       puts msg
@@ -54,16 +54,16 @@ module DiceBot
 
     def connect
       @connection = Connection.new(@server, @port, @ssl)
-      
+
       @connection.speak "NICK #{@nick}"
       @connection.speak "USER #{@nick} #{@nick} * :#{@nick}: ?help for more information"
       # TODO: fix join bug
-      # TODO: what is the join bug?      
+      # TODO: what is the join bug?
     end
-	
+
 	def join_initial
     if !@first_live
-      join(@channels)		
+      join(@channels)
     elsif (@initialJoinTimer - Time.now) > 15
       @initialJoinTimer = Time.now
       join_quietly(@channels)
@@ -71,66 +71,66 @@ module DiceBot
 	end
 
     def join(channels)
-      if channels.kind_of?(Array) 
+      if channels.kind_of?(Array)
           channels.each do |channel|
-            # join channel            
+            # join channel
             @connection.speak "JOIN #{channel}"
             puts "Joining #{channel}"
             Utilities::Logger.new.log("Joining #{channel}")
-          end 
+          end
       else
-        @connection.speak "JOIN #{channels}"            
+        @connection.speak "JOIN #{channels}"
         puts "Joining #{channels}"
         Utilities::Logger.new.log("Joining #{channels}")
       end
     end
-	
+
     def operator(channel, name)
-      @connection.speak "MODE #{channel} +o #{name}"	
+      @connection.speak "MODE #{channel} +o #{name}"
       puts "Giving Op to #{name} on #{channel}"
       Utilities::Logger.new.log("Giving Op to #{name} on #{channel}")
     end
-    
+
     def part(channel)
       puts "Leaving #{channel}"
       Utilities::Logger.new.log("Leaving #{channel}")
       @connection.speak "PART #{channel} :Heads to the teahouse"
     end
-    
+
     def join_quietly(channels)
-      if channels.kind_of?(Array) 
+      if channels.kind_of?(Array)
         channels.each do |channel|
           # join channel
           @connection.speak("JOIN #{channel}", true)
         end
       else
-        @connection.speak "JOIN #{channels}"        
+        @connection.speak "JOIN #{channels}"
       end
     end
-    
+
     def run # go
       # stay connected
       # handle replies
 
-      while @running[:state]		
-        while @connection.disconnected? 
+      while @running[:state]
+        while @connection.disconnected?
           puts "disconnected, sleeping for 30 then trying to connect."
           sleep 30
           puts "connecting..."
-          connect()             
+          connect()
         end
         sleep(0.1)
         speak_input
         handle_msg (@connection.listen)
       end
     end
-    
-    def handle_msg(msg)	
+
+    def handle_msg(msg)
     join_initial
-	  if !msg.nil? && !@first_live				
-      @first_live = true		
-      @initialJoinTimer = Time.new      
-	  end      
+	  if !msg.nil? && !@first_live
+      @first_live = true
+      @initialJoinTimer = Time.new
+	  end
       case msg
         when nil
           changed = false
@@ -142,13 +142,13 @@ module DiceBot
             changed = true
           end
           if(@pingOut && Time.new-@lastPing > @pingTimeout)
-            puts "ping timeout" 
+            puts "ping timeout"
             @connection.disconnect
             @pingOut = false
             @lastPing = Time.new
             changed = true
           end
-          debug("Null Message") if changed          
+          debug("Null Message") if changed
         when /^PING (.+)$/
           lastPong = Time.new
           puts "PONGED #{lastPong}" if @debug
@@ -163,12 +163,12 @@ module DiceBot
           Utilities::Logger.new.log("RAW>>"+msg)
           puts "RAW>> #{msg}"
           #nothing
-      end      
+      end
       if(@debug && !msg.nil?) then
         debug(msg);
       end
     end
-    
+
     def respond(msg)
       if msg.mode == "INVITE"
         join msg.text
@@ -180,42 +180,42 @@ module DiceBot
         elsif msg.text =~ /^@leave (#.*)$/  #someone messaged him with @leave #channel
         part $1.to_s
       elsif msg.text =~ /^\?(\S+)/ #help command
-        reply_array(msg, Utilities::Helper.new.help($1))        
+        reply_array(msg, Utilities::Helper.new.help($1))
       elsif msg.text =~ /^!([a-z0-9_]*)([+\-# ].*)?$/ #a roll alias name, possibly followed by additional dice and or a label
-        rollString = @rollAliases.load(msg.name, $1)        
+        rollString = @rollAliases.load(msg.name, $1)
         reply(msg, "Sorry, I don't have that alias stored for your name.") unless !rollString.nil?
-        return unless !rollString.nil?                
+        return unless !rollString.nil?
         if(rollString.include?("#") && !$2.nil? && $2.include?("#")) #if there's already a label in the alias and they added a new label, combine them.
-          rollString.sub!(/#.*/, msg.text[$1.size+1,msg.text.size])                  
+          rollString.sub!(/#.*/, msg.text[$1.size+1,msg.text.size])
         elsif(rollString.include?("#")) #if there's just a label in the stored alias, insert any dice rolls into the roll string ahead of the label
-          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")    
+          rollString.sub!("#", msg.text[$1.size+1,msg.text.size]+ " #")
         elsif(msg.text.size+1 > ($1.size)) #if the rollstring has no label just tack on whatever they added to the alias.
-          rollString = rollString + msg.text[$1.size+1,msg.text.size]                    
+          rollString = rollString + msg.text[$1.size+1,msg.text.size]
         end
-        respond_roll(rollString, msg)        
+        respond_roll(rollString, msg)
       elsif msg.text =~ /^@(\S+)/ #commands from the users, also incidently operator users in the 353 channel user listing mode
         reply(msg, command(msg)) unless msg.mode == "353"
-      elsif msg.text =~ /^(\S+) [0-9]*[dkeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.                  
+      elsif msg.text =~ /^(\S+) [0-9]*[dknxeum]+[0-9].*/i #roll message following some initial text like roll, r, etc.
         return unless @rollPrefaces.include?($1)
         respond_roll(msg.text, msg)
-      elsif msg.text =~ /^[0-9]*[dkeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.        
+      elsif msg.text =~ /^[0-9]*[dknxeum]+[0-9].*/i  #roll message without preface, roll if no competing dicebots detected.
         return if @botLocations.count{|x| x.slice(0,msg.origin.size+1) == "#{msg.origin.upcase}." } > 0 #index is faster, but have to deal with nils.
         respond_roll(msg.text, msg)
       end
-    end   
-    
+    end
+
     def respond_roll(rollstring, msg)
       parser = GrammarEngine.new(rollstring)
       begin
-        result = parser.execute          
+        result = parser.execute
         putRoll(msg, result)
       rescue Exception => e
         puts "ERROR: " + e.to_s
         Utilities::Logger.new.log("ERROR: " + e.to_s)
         reply(msg, "I had an unexpected error, sorry.")
       end
-    end    
-    
+    end
+
     def command(msg)
 	  puts
       case msg.text
@@ -238,18 +238,18 @@ module DiceBot
           return "Operator mode given to #{$1}"
         else
           return "I don't recognize that command, sorry."
-      end      
+      end
     end
-    
+
     def setMode(text)
       results = text.split(':')
       @rollPrefaces = Array.new
-      results.each { |x| 
+      results.each { |x|
       case x
         when /r/i
-          @rollPrefaces << "r" unless @rollPrefaces.include?("r")        
+          @rollPrefaces << "r" unless @rollPrefaces.include?("r")
         when /roll/i
-          @rollPrefaces << "roll" unless @rollPrefaces.include?("roll")        
+          @rollPrefaces << "roll" unless @rollPrefaces.include?("roll")
       end
       }
     end
@@ -261,7 +261,7 @@ module DiceBot
         @connection.speak "#{msg.mode} #{msg.origin} :#{msg.name}, #{message}"
       end
     end
-    
+
     def reply_array(msg, message) # reply to a pm or channel message
       return if message.nil?
       if msg.privmsg
@@ -276,16 +276,16 @@ module DiceBot
         }
       end
     end
-    
-    def putRoll(msg, result)  
+
+    def putRoll(msg, result)
       postfix = ""
       prefix = ""
       if msg.privmsg
         prefix = "#{msg.mode} #{msg.name} "
       else
-        prefix = "#{msg.mode} #{msg.origin} "        
+        prefix = "#{msg.mode} #{msg.origin} "
       end
-      if result[:error]            
+      if result[:error]
         postfix = ":#{result[:message]}"
       else
         postfix = ":\x01ACTION rolls the dice for #{msg.name} #{result[:message]}\x01"
@@ -295,46 +295,46 @@ module DiceBot
       Utilities::Logger.new.log(prefix+postfix)
       @connection.speak (prefix+postfix)
     end
-    
+
     def pm(person, message)
       person = @channels[0] if person =~ /:/
       @connection.speak "PRIVMSG #{person} :#{message}"
     end
-    
+
     def say(channel, message)
       pm(channel, message) # they're functionally the same
       sleep(0.25)
     end
-    
+
     def say_array(channel, message)
       message.each { |x|
-        pm(channel, x.chomp) 
+        pm(channel, x.chomp)
         sleep(0.25)
       }
     end
-    
-    def speak_input() 
-      outLine = ""      
-      @sema.synchronize{outLine = String.new(@outputBuffer[0])}      
+
+    def speak_input()
+      outLine = ""
+      @sema.synchronize{outLine = String.new(@outputBuffer[0])}
       if(outLine.nil? or outLine.empty?)
         return
-      end      
+      end
       if(outLine =~/^!/)
         @connection.speak outLine.slice(1..outLine.size)
         @sema.synchronize{@outputBuffer[0] = ""}
         return
-      end        
-      target = outLine.slice(/^\S+/i)      
-      message = outLine.slice(/ .*/)      
+      end
+      target = outLine.slice(/^\S+/i)
+      message = outLine.slice(/ .*/)
       if (target =~ /join/i)
         join message
         @sema.synchronize{@outputBuffer[0] = ""}
         return
       end
-      pm(target, message) 
+      pm(target, message)
       @sema.synchronize{@outputBuffer[0] = ""}
     end
-    
+
     def notice(person, message)
       @conection.speak "NOTICE #{person} :#{message}"
     end
@@ -348,14 +348,14 @@ module DiceBot
 
   class Message
     attr_accessor :name, :hostname, :mode, :origin, :privmsg, :text, :kicked, :pinged
-    
+
     def initialize(msg, botLocations, bots)
       @botLocations = botLocations
-      @bots = bots    
+      @bots = bots
       @pinged = false
-      parse(msg)      
+      parse(msg)
     end
-    
+
     def parse(msg)
       # sample messages:
       # :JDigital!~JD@86.156.2.220 PRIVMSG #bones :hi
@@ -378,29 +378,29 @@ module DiceBot
             @privmsg = true
           end
           @text = $6.chomp
-          print()        
-        when /^:(\S+) ([0-9]+) (.*) ((#?)\S+) :(.+)/          
+          print()
+        when /^:(\S+) ([0-9]+) (.*) ((#?)\S+) :(.+)/
           @origin = $4
-          @mode = $2                    
+          @mode = $2
           if ($5 == "#")
             @privmsg = false
           else
             @privmsg = true
           end
           @text = $6.chomp
-        when /^:(\S+)!(\S+) (JOIN|QUIT) :(.+)/          
+        when /^:(\S+)!(\S+) (JOIN|QUIT) :(.+)/
           @name = $1
-          @mode = $3  
+          @mode = $3
           @origin = $4
-        when /^:(\S+) (PONG) (.*)/                    
-          @mode = $2                              
-      end      
+        when /^:(\S+) (PONG) (.*)/
+          @mode = $2
+      end
       puts "mode:#{@mode}" if @debug
       if(@mode == "PONG")
         puts "ponged by server" if @debug
         @pinged = true
-      end     
-      return if @bots.empty?   
+      end
+      return if @bots.empty?
       if(@mode == "353")
         foundBots = @text.upcase.split.select {|x| @bots.include? x} #array of bots found
         foundBots.each {|x| puts x}
@@ -419,7 +419,7 @@ module DiceBot
       end
       if(@mode == "JOIN")
         @botLocations  << "#{@origin.chomp.upcase}.#{@name.chomp.upcase}" unless @bots.index{|x| @name.chomp.upcase == x }.nil?
-      end 
+      end
     end
 
     def print
