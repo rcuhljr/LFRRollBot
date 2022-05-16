@@ -15,7 +15,7 @@ class GrammarEngine
   def rollSplitter
     @rollText.slice!(/^roll /i)
     @rollText.slice!(/^r /i)
-    @orig = @rollText
+    @orig = @rollText.dup
     @label = @rollText.slice!(/#.*$/)
     @label = @label[1..@label.size] unless @label.nil?
     @label ||= ""
@@ -35,7 +35,15 @@ class GrammarEngine
 	while(!@rollText.sub!(/({[^}]*)[\s]+([^}]*})/){|s| $1 + $2}.nil?) do #remove spaces before and inside {}
       #puts @rollText
     end
+    if @rollText =~ /[kn]/i && @rollText =~ /(\+\s+\d|-\s+\d)/
+      @modifier = $1
+      @modifier.gsub!(/\s/,"")
+    end
     @atoms = @rollText.split(' ')
+    if @atoms.delete("NND")
+      @hero_damage = true
+      @nnd = true
+    end
   end
 
   def evalute (inStr)
@@ -57,6 +65,8 @@ class GrammarEngine
         rollResult = Roll($1,$2,$3,$4)
       elsif(inStr =~ /(d)([0-9]+)(\{.*\}|$)/i)#<type><num>[<options>]
         rollResult = Roll("1",$1,$2,$3)
+      elsif(inStr =~ /([0-9]+)([dknxeum]+)([0-9]+)([dknxeum]+)$/i)
+        rollResult = Roll($1,$2+$4,$3, "")
       elsif(inStr =~ /[0-9]+/)
         rollResult = {:total => inStr.to_i, :values => ""}
       end
@@ -65,6 +75,7 @@ class GrammarEngine
       return
     end
     if @hero_damage
+      return if rollResult[:values].empty?
       if @nnd && !@killing
         @result = " Stun-#{count_stun(rollResult[:values]).ceil}"
       else
@@ -87,6 +98,9 @@ class GrammarEngine
 
   def count_stun(values)
     result = values.sum
+    if @modifier
+      result = eval("#{result}#{@modifier}")
+    end
     multipliers = find_location_multipliers
     bonus = @label.scan(/\d+/).first.to_i
     if multipliers.empty?
@@ -121,6 +135,9 @@ class GrammarEngine
       }.sum
     else
       result = values.sum
+    end
+    if @modifier
+      result = eval("#{result}#{@modifier}")
     end
     if multipliers.empty?
       return result
@@ -197,7 +214,7 @@ class GrammarEngine
     @atoms.each {|x| evalute x unless @failed}
     return {:error => true, :message => @failText} if @failed
     @label = "##{@label}" unless (@label.nil? || @label.size == 0)
-    aMessage = "(#{@orig}#{@label}) #{@resultString}:#{@result}"
+    aMessage = @label =~ /show/ ? "(#{@orig}) #{@resultString}:#{@result}" : "(#{@orig}):#{@result}"
     shortMessage = "(#{@orig}#{@label}) for a total of #{@result}"
     return {:error => false, :message => aMessage, :shortmessage => shortMessage}
   end
