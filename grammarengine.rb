@@ -35,8 +35,13 @@ class GrammarEngine
 	while(!@rollText.sub!(/({[^}]*)[\s]+([^}]*})/){|s| $1 + $2}.nil?) do #remove spaces before and inside {}
       #puts @rollText
     end
+    if @rollText =~ /(\+\s+1\/2)/
+      @half_die = 1+rand(3)
+      @rollText.gsub!($1,"")
+    end
     if @rollText =~ /[kn]/i && @rollText =~ /(\+\s+\d|-\s+\d)/
       @modifier = $1
+      @rollText.gsub!($1,"")
       @modifier.gsub!(/\s/,"")
     end
     @atoms = @rollText.split(' ')
@@ -101,6 +106,9 @@ class GrammarEngine
     if @modifier
       result = eval("#{result}#{@modifier}")
     end
+    if @half_die
+      result += @half_die
+    end
     multipliers = find_location_multipliers
     bonus = @label.scan(/\d+/).first.to_i
     if multipliers.empty?
@@ -138,6 +146,9 @@ class GrammarEngine
     end
     if @modifier
       result = eval("#{result}#{@modifier}")
+    end
+    if @half_die
+      result += @half_die
     end
     if multipliers.empty?
       return result
