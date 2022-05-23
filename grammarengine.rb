@@ -227,7 +227,7 @@ class GrammarEngine
     return {:error => true, :message => @failText} if @failed
     @label = "##{@label}" unless (@label.nil? || @label.size == 0)
     aMessage = if @label =~ /show/
-                 "(#{@orig}) #{@resultString}:#{@result}(half:#{@half_die}, 1d6-1:#{@rand_stun_mod})"
+                 "(#{@orig}) #{@resultString}(half:#{@half_die}, 1d6-1:#{@rand_stun_mod}):#{@result}"
                else
                  "(#{@orig}):#{@result}"
                end
