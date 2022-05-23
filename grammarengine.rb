@@ -226,8 +226,17 @@ class GrammarEngine
     @atoms.each {|x| evalute x unless @failed}
     return {:error => true, :message => @failText} if @failed
     @label = "##{@label}" unless (@label.nil? || @label.size == 0)
+    debug_info = if @half_die && @rand_stun_mod
+                   "(half:#{@half_die}, 1d6-1:#{@rand_stun_mod})"
+                 elsif @half_die
+                   "(half:#{@half_die})"
+                 elsif @rand_stun_mod
+                   "(1d6-1:#{@rand_stun_mod})"
+                 else
+                   ""
+                 end
     aMessage = if @label =~ /show/
-                 "(#{@orig}) #{@resultString}(half:#{@half_die}, 1d6-1:#{@rand_stun_mod}):#{@result}"
+                 "(#{@orig}) #{@resultString}#{debug_info}:#{@result}"
                else
                  "(#{@orig}):#{@result}"
                end
