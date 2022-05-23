@@ -113,7 +113,8 @@ class GrammarEngine
     bonus = @label.scan(/\d+/).first.to_i
     if multipliers.empty?
       if @killing
-        return result*([rand(6),1].max + bonus)
+        @rand_stun_mod = [rand(6),1].max
+        return result*(@rand_stun_mod + bonus)
       else
         return result*(1+bonus)
       end
@@ -225,7 +226,11 @@ class GrammarEngine
     @atoms.each {|x| evalute x unless @failed}
     return {:error => true, :message => @failText} if @failed
     @label = "##{@label}" unless (@label.nil? || @label.size == 0)
-    aMessage = @label =~ /show/ ? "(#{@orig}) #{@resultString}:#{@result}" : "(#{@orig}):#{@result}"
+    aMessage = if @label =~ /show/
+                 "(#{@orig}) #{@resultString}:#{@result}(half:#{@half_die}, 1d6-1:#{@rand_stun_mod})"
+               else
+                 "(#{@orig}):#{@result}"
+               end
     shortMessage = "(#{@orig}#{@label}) for a total of #{@result}"
     return {:error => false, :message => aMessage, :shortmessage => shortMessage}
   end
